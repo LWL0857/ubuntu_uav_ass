@@ -572,6 +572,9 @@ void UavBase::cmd_vel_callback(const geometry_msgs::msg::Twist::SharedPtr msg)
 }
 
 
+
+
+
 //动捕数据尚待解决
 void UavBase::mocap_pos_callback(geometry_msgs::PoseStamped::ConstPtr& msgconst geometry_msgs::PoseStamped msg)
 {
