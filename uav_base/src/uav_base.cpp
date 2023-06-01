@@ -330,9 +330,9 @@ void UavBase::processEulerData(DataFrame &frame)
 }
 void UavBase::processUwbData(DataFrame &frame)
 {
-
-
-
+    uwb_data_.x=uwb_conversion(frame.data[1],frame.date[0]);
+    uwb_data_.y=uwb_conversion(frame.data[3],frame.data[2]);
+    uwb_data_.z=uwb_conversion(frame.data[5],frame.data[4]);
     if(use_uwb_)
         uwb_publisher();
 }
