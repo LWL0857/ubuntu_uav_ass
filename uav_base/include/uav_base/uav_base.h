@@ -49,13 +49,20 @@ using std::placeholders::_1;
 using std::placeholders::_2;
 
 #define UAV_WHEEL_TRACK  (0.11)
-
+//数据
+//mocap uwb 数据都是float,4byte
+union DataFloat
+{
+    float d;
+    unsigned char data[4];
+};
 // uav protocol data format
 typedef struct {
     uint8_t header;
     uint8_t id;
     uint8_t length;
-    uint8_t data[6];
+    //7*4=28
+    uint8_t data[28];
     uint8_t check;
     uint8_t tail;
 } DataFrame;
@@ -88,6 +95,11 @@ enum {
     FRAME_ID_HMI          = 0x07,
     FRAME_ID_UWB          = 0x08,
     FRAME_ID_MOCAP        = 0x09,
+
+    FRAME_ID_STATUS       = 0x01,
+    FRAME_ID_IMU          = 0x02,
+    FRAME_ID_MAG          = 0x03,
+    FRAME_ID_UWB          = 0x04,   
 };
 
 class UavBase : public rclcpp::Node
@@ -135,6 +147,14 @@ private:
 private:
     serial::Serial serial_;
     rclcpp::Time current_time_;
+    float ahrsEular_x_=0.0,ahrsEular_y_=0.0,ahrsEular_z_=0.0,height_=0;
+    uint8_t mode_=0;
+    uint8_t lock_=0;
+
+    float acc_x_=0.0,acc_y_=0.0,acc_z_=0.0;
+    float gyro_x_=0.0,gyro_y_=0.0,gyro_z_=0.0;
+    float magraw_x_=0.0,magraw_y_=0.0,magraw_z_=0.0;
+
     float odom_x_=0.0, odom_y_=0.0, odom_th_=0.0;
 
     float correct_factor_vx_ = 1.0;

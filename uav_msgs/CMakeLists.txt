@@ -28,6 +28,8 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "srv/UavBuzzer.srv"
   "srv/UavLed.srv"
   "srv/UavPID.srv"
+  DEPENDENCIES std_msgs
+
 )
 
 

@@ -118,7 +118,7 @@ UavBase::UavBase(std::string nodeName) : Node(nodeName)
     if(use_mocap_)
     {
         mocap_subscription_ = this->create_subscription<geometry_msgs::PoseStamped>(mocap_sub_name, 10,std::bind(&UavBase::mocap_pos_callback, this, _1));
-        mocap_publisher_=this->create_publsiher<geometry_msgs::PoseStamped>("mocap",10);
+
     }
     // 设置LED灯的初始状态
     robot_status_.led_on = true;
@@ -143,6 +143,7 @@ UavBase::~UavBase()
 void UavBase::readRawData()
 {
     uint8_t rx_data = 0;
+    // uint8_t rx_data1= 0;
     DataFrame frame;
 
     while (rclcpp::ok()) 
@@ -155,8 +156,26 @@ void UavBase::readRawData()
         // 发现帧头后开始处理数据帧
         if(rx_data == 0x55)
         {
+           /*  auto length_num=serial_.read(&rx_data1,1)
+            switch(length_num)
+            {  case FRAME_ID_STATUS:
+                    serial_.read(&frame.id, 16);
+                    break;
+                case FRAME_ID_ACCELERATION:
+                    break;
+                case FRAME_ID_ANGULAR:
+                     break;
+                case FRAME_ID_EULER:
+                      break;
+                case FRAME_ID_SENSOR:
+                    break;
+                case FRAME_ID_UWB:
+                default:
+                    break;
+            } */
             // 读取完整的数据帧
-            serial_.read(&frame.id, 10);
+            serial_.read(&frame.id, 32);
+            //ID,开始的32个byte.7*4+4=32
 
             // 判断帧尾是否正确
             if(frame.tail != 0xbb)
@@ -190,11 +209,25 @@ void UavBase::readRawData()
 
 bool UavBase::checkDataFrame(DataFrame &frame)
 {    
+    int len=frame.legnth;
+    uint8_t sum=0;
+    for(int i<0;i<len;i++)
+    {   
+        sum+=frame.data[i];
+
+    }
+    if((sum & 0xff)==frame.check)
+        return true;
+    else
+        return false;
+    /*
+    
     if(((frame.data[0] + frame.data[1] + frame.data[2] + 
         frame.data[3] + frame.data[4] + frame.data[5]) & 0xff) == frame.check)
         return true;
     else
         return false;
+    */
 }
 
 void UavBase::processDataFrame(DataFrame &frame)
@@ -202,6 +235,17 @@ void UavBase::processDataFrame(DataFrame &frame)
     // 根据数据帧的ID，对应处理帧数据
     switch(frame.id)
     {
+    case FRAME_ID_STATUS:
+        processStatusData(frame);
+        break;
+    case FRAME_ID_IMU:
+        processImuData(frame);
+        break;
+    case FRAME_ID_MAG:
+        processMagData(frame);
+        break;
+    case FRAME_ID_UWB:
+        procUwbbData(frame);
     case FRAME_ID_VELOCITY:
         processVelocityData(frame);
         break;
@@ -223,6 +267,25 @@ void UavBase::processDataFrame(DataFrame &frame)
         RCLCPP_ERROR(this->get_logger(), "Frame ID Error[%d]", frame.id);
         break;
     }
+}
+
+void UavBase::processStatusData(DataFrame &frame)
+{
+    //RCLCPP_INFO(this->get_logger(), "Process status data");
+
+    DataFloat ahrsEular_x,ahrsEular_y,ahrsEular_z,height;
+    memcpy(&ahrsEular_x.data,&frame.data[0],4);
+    memcpy(&ahrsEular_y.data,&frame.data[4],4);
+    memcpy(&ahrsEular_z.data,&frame.data[8],4);
+    memcpy(&height.data,&frame.data[12],4);
+    ahrsEular_x_=ahrsEular_x.f;
+    ahrsEular_y_=ahrsEular_y.f;
+    ahrsEular_z_=ahrsEular_z.f;
+    height_=height.f;
+    memcpy(&mode_,&frame.data[13],4);
+    memcpy(&lock_,&frame.data[14],4);
+   
+    status_publisher();    
 }
 
 void UavBase::processVelocityData(DataFrame &frame)
@@ -330,9 +393,13 @@ void UavBase::processEulerData(DataFrame &frame)
 }
 void UavBase::processUwbData(DataFrame &frame)
 {
-    uwb_data_.x=uwb_conversion(frame.data[1],frame.date[0]);
-    uwb_data_.y=uwb_conversion(frame.data[3],frame.data[2]);
-    uwb_data_.z=uwb_conversion(frame.data[5],frame.data[4]);
+    DataFloat uwb_x,uwb_y,uwb_z;
+    memcpy(&uwb_x.data,&frame.data[0],4);
+    memcpy(&uwb_y.data,&frame.data[4],4);
+    memcpy(&uwb_z.data,&frame.data[8],4);
+    uwb_data_.x=uwb_x.d;
+    uwb_data_.y=uwb_y.d;
+    uwb_data_.z=uwb_z.d;
     if(use_uwb_)
         uwb_publisher();
 }
@@ -477,7 +544,7 @@ void UavBase::imu_publisher()
 void UavBase::uwb_publisher()
 {
     //封装uwb的话题消息
-    auto uwb_msg=uav_msgs::msg::uwb_msg();
+    auto uwb_msg=uav_msgs::msg::UavUwb();
     uwb_msg.x=uwb_data_.x;
     uwb_msg.y=uwb_data_.y;
     uwb_msg.z=uwb_data_.z
@@ -574,7 +641,6 @@ void UavBase::cmd_vel_callback(const geometry_msgs::msg::Twist::SharedPtr msg)
 
 
 
-
 //动捕数据尚待解决
 void UavBase::mocap_pos_callback(geometry_msgs::PoseStamped::ConstPtr& msgconst geometry_msgs::PoseStamped msg)
 {
@@ -583,45 +649,41 @@ void UavBase::mocap_pos_callback(geometry_msgs::PoseStamped::ConstPtr& msgconst 
     ROS_INFO("the orientation(x,y,z,w) is %f , %f, %f, %f", msg->pose.orientation.x, msg->pose.orientation.y, msg->pose.orientation.z, msg->pose.orientation.w);
     ROS_INFO("the time we get the pose is %f",  msg->header.stamp.sec + 1e-9*msg->header.stamp.nsec);
     std::cout<<"\n \n"<<std::endl; //add two more blank row so that we can see the message more clearly
+    DataFloat mocap_pox_x,mocap_pos_y,mocap_pos_z,mocap_ori_x,mocap_ori_y,mocap_ori_z,mocap_ori_w;
     DataFrame mocapFrame;
 
+    mocap_pox_x.d=msg->pose.position.x;
+    mocap_pos_y.d=msg->pose.position.y
+    mocap_pos_z.d=msg->pose.position.z
+    mocap_ori_x.d=msg->pose.orientation.x
+    mocap_ori_y.d=msg->pose.orientation.y
+    mocap_ori_z.d=msg->pose.orientation.z
+    mocap_ori_w.d=msg->pose.orientation.w
+    memcpy(&mocapFrame.data[0],&mocap_pox_x.data,4);
+    memcpy(&mocapFrame.data[4],&mocap_pox_y.data,4);
+    memcpy(&mocapFrame.data[8],&mocap_pox_z.data,4);
+    memcpy(&mocapFrame.data[12],&mocap_ori_x.data,4);
+    memcpy(&mocapFrame.data[16],&mocap_ori_y.data,4);
+    memcpy(&mocapFrame.data[20],&mocap_ori_z.data,4);
+    memcpy(&mocapFrame.data[24],&mocap_ori_w.data,4);
+    // 封装速度命令的
+    mocapFrame.header = 0x55;
+    mocapFrame.id     = 0x09;
+    mocapFrame.length = 0x1c;
+    mocapFrame.tail   = 0xbb;
 
-    float leftSpeed = 0.0, rightSpeed = 0.0;
+    int len=mocapFrame.length;
+    uint8_t sum=0;
+    for(int i<0;i<len;i++)
+    {   
+        sum+=mocapFrame.data[i];
 
-    float x_linear = msg->linear.x; 
-    float z_angular = msg->angular.z;
+    }
+    mocapFrame.check = sum & 0xff;
 
-    //差分轮运动学模型求解
-    leftSpeed  = x_linear - z_angular * ORIGINBOT_WHEEL_TRACK / 2.0;
-    rightSpeed = x_linear + z_angular * ORIGINBOT_WHEEL_TRACK / 2.0;
-
-    // RCLCPP_INFO(this->get_logger(), "leftSpeed = '%f' rightSpeed = '%f'", leftSpeed * 100, rightSpeed * 100);
-
-    if (leftSpeed < 0)
-        cmdFrame.data[0] = 0x00;
-    else
-        cmdFrame.data[0] = 0xff;
-    cmdFrame.data[1] = int(abs(leftSpeed) * 1000) & 0xff;         //速度值从m/s变为mm/s
-    cmdFrame.data[2] = (int(abs(leftSpeed) * 1000) >> 8) & 0xff;
-
-    if (rightSpeed < 0)
-        cmdFrame.data[3] = 0x00;
-    else
-        cmdFrame.data[3] = 0xff;
-    cmdFrame.data[4] = int(abs(rightSpeed) * 1000) & 0xff;        //速度值从m/s变为mm/s
-    cmdFrame.data[5] = (int(abs(rightSpeed) * 1000) >> 8) & 0xff;
-
-    cmdFrame.check = (cmdFrame.data[0] + cmdFrame.data[1] + cmdFrame.data[2] + 
-                      cmdFrame.data[3] + cmdFrame.data[4] + cmdFrame.data[5]) & 0xff;
-
-    // 封装速度命令的数据帧
-    cmdFrame.header = 0x55;
-    cmdFrame.id     = 0x01;
-    cmdFrame.length = 0x06;
-    cmdFrame.tail   = 0xbb;
     try
     {
-        serial_.write(&cmdFrame.header, sizeof(cmdFrame)); //向串口发数据
+        serial_.write(&mocapFrame.header, sizeof(mocapFrame)); //向串口发数据
     }
 
     catch (serial::IOException &e)
@@ -629,13 +691,6 @@ void UavBase::mocap_pos_callback(geometry_msgs::PoseStamped::ConstPtr& msgconst 
         RCLCPP_ERROR(this->get_logger(), "Unable to send data through serial port"); //如果发送数据失败,打印错误信息
     }
 
-    // 考虑平稳停车的计数值
-    if((fabs(x_linear)>0.0001) || (fabs(z_angular)>0.0001))
-        auto_stop_count_ = 0;
-
-    // printf("Frame raw data: %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x \n", 
-    //         cmdFrame.header, cmdFrame.id, cmdFrame.length, cmdFrame.data[0], cmdFrame.data[1], cmdFrame.data[2], 
-    //         cmdFrame.data[3], cmdFrame.data[4], cmdFrame.data[5], cmdFrame.check, cmdFrame.tail);
 }
 
 bool UavBase::buzzer_control(bool on)
