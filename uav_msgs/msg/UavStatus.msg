@@ -1,5 +1,7 @@
 std_msgs/Header header
-float32[3] ahrsEular
+float32 ahrsEular_x
+float32 ahrsEular_y
+float32 ahrsEular_z
 float32 height
 float32 battery_voltage
 uint8_t mode

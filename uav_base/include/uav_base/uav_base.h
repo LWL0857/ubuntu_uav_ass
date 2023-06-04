@@ -41,6 +41,7 @@ limitations under the License.
 #include "uav_msgs/srv/uav_pid.hpp"
 #include "uav_msgs/srv/uav_mocap.hpp"
 #include "uav_msgs/srv/uav_uwb.hpp"
+#include "uav_msgs/msg/imu.hpp"
 //mocap数据类型
 #include "geometry_msgs/PoseStamped.h"
 
@@ -78,12 +79,31 @@ typedef struct {
     float pitch;
     float yaw;
 } DataImu;
-
+typedef struct{
+    float32 acc_x;
+    float32 acc_y;
+    float32 acc_z;
+    float32 gyro_x;
+    float32 gyro_y;
+    float32 gyro_z;
+} Imu;
 typedef struct {
-    float battery_voltage;
+    float32 ahrsEular_x;
+    float32 ahrsEular_y;
+    float32 ahrsEular_z;
+    float32 height;
+    float32 battery_voltage;
+    uint8_t mode;
+    uint8_t lock;
     bool buzzer_on;
     bool led_on;
-} RobotStatus;
+} UavStatus;
+
+typedef struct {
+    float32 pos_x;
+    float32 pos_y;
+    float32 pos_z;
+} UavUwb
 
 enum {
     FRAME_ID_MOTION       = 0x01,
@@ -120,7 +140,12 @@ private:
     void processAccelerationData(DataFrame &frame);
     void processEulerData(DataFrame &frame);
     void processSensorData(DataFrame &frame);
-    void processUwbData(DataFrame &frame)
+
+    void processStatusData(DataFrame &frame);
+    void processUwbData(DataFrame &frame);
+    void processImuData(DataFrame &frame);
+    void processMagData(DataFrame &frame);
+
 
     double imu_conversion(uint8_t data_high, uint8_t data_low);
     bool   imu_calibration();
@@ -128,6 +153,8 @@ private:
 
     void odom_publisher(float vx, float vth);
     void imu_publisher();
+    void status_publisher();
+    void uwb_publisher();
 
     bool buzzer_control(bool on);
     bool led_control(bool on);
@@ -147,13 +174,20 @@ private:
 private:
     serial::Serial serial_;
     rclcpp::Time current_time_;
-    float ahrsEular_x_=0.0,ahrsEular_y_=0.0,ahrsEular_z_=0.0,height_=0;
+    /*
+    float ahrsEular_x_=0.0,ahrsEular_y_=0.0,ahrsEular_z_=0.0,
+    height_=0,battery_Voltage_=0.0;
     uint8_t mode_=0;
     uint8_t lock_=0;
-
+    */
+   /*
+   
     float acc_x_=0.0,acc_y_=0.0,acc_z_=0.0;
     float gyro_x_=0.0,gyro_y_=0.0,gyro_z_=0.0;
     float magraw_x_=0.0,magraw_y_=0.0,magraw_z_=0.0;
+   */
+
+   
 
     float odom_x_=0.0, odom_y_=0.0, odom_th_=0.0;
 
@@ -161,9 +195,10 @@ private:
     float correct_factor_vth_ = 1.0;    
     
     std::shared_ptr<std::thread> read_data_thread_;
-    DataImu imu_data_;
-    UavUwb uwb_data_;
-    RobotStatus robot_status_;
+    //DataImu imu_data_;
+    UavUwb uwb_data_;//ok
+    UavStatus uav_status_;//ok
+    Imu imu_data_;
 
     rclcpp::TimerBase::SharedPtr timer_100ms_;
     bool auto_stop_on_ = true;
@@ -175,7 +210,8 @@ private:
 
     rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr odom_publisher_;
     rclcpp::Publisher<sensor_msgs::msg::Imu>::SharedPtr imu_publisher_;
-    rclcpp::Publisher<originbot_msgs::msg::UavStatus>::SharedPtr status_publisher_;
+    rclcpp::Publisher<uav_msgs::msg::UavStatus>::SharedPtr status_publisher_;
+    rclcpp::Publisher<uav_msgs::msg::UavUwb>::SharedPtr uwb_publisher_;
 
     rclcpp::Subscription<geometry_msgs::msg::Twist>::SharedPtr cmd_vel_subscription_;
    
