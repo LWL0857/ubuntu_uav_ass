@@ -88,6 +88,11 @@ typedef struct{
     float32 gyro_z;
 } Imu;
 typedef struct {
+    float32 magraw_x;
+    float32 magraw_y;
+    float32 magraw_w;
+} MagRaw;
+typedef struct {
     float32 ahrsEular_x;
     float32 ahrsEular_y;
     float32 ahrsEular_z;
@@ -103,7 +108,49 @@ typedef struct {
     float32 pos_x;
     float32 pos_y;
     float32 pos_z;
-} UavUwb
+} UavUwb ;
+typedef struct
+{
+    uint16_t ppm_0;
+    uint16_t ppm_1;
+    uint16_t ppm_2;
+    uint16_t ppm_3;
+    uint16_t ppm_4;
+    uint16_t ppm_5;
+    uint16_t ppm_6;
+    uint16_t ppm_7;
+    uint16_t ppm_8;
+    uint16_t ppm_9;
+    uint16_t ppm_10;
+    uint16_t ppm_11;
+    uint16_t ppm_12;
+    uint16_t ppm_13;
+    uint16_t ppm_14;
+    uint16_t ppm_15;
+    uint16_t ppm_16;
+} RcData;
+typedef struct
+{
+    uint16_t pwm_0;
+    uint16_t pwm_1;
+    uint16_t pwm_2;
+    uint16_t pwm_3;
+    uint16_t pwm_4;
+    uint16_t pwm_5;
+    uint16_t pwm_6;
+    uint16_t pwm_7;
+    uint16_t pwm_8;
+    uint16_t pwm_9;
+    uint16_t pwm_10;
+    uint16_t pwm_11;
+    uint16_t pwm_12;
+    uint16_t pwm_13;
+    uint16_t pwm_14;
+    uint16_t pwm_15;
+    uint16_t pwm_16;
+} MotorPwm;
+
+
 
 enum {
     FRAME_ID_MOTION       = 0x01,
@@ -145,6 +192,9 @@ private:
     void processUwbData(DataFrame &frame);
     void processImuData(DataFrame &frame);
     void processMagData(DataFrame &frame);
+    void processMotorPWMData(DataFrame &frame);
+    void processRcData(DataFrame &frame);
+
 
 
     double imu_conversion(uint8_t data_high, uint8_t data_low);
@@ -155,6 +205,9 @@ private:
     void imu_publisher();
     void status_publisher();
     void uwb_publisher();
+    void mag_publisher();
+    void motorpwm_publisher();
+    void rc_publisher();
 
     bool buzzer_control(bool on);
     bool led_control(bool on);
@@ -198,7 +251,10 @@ private:
     //DataImu imu_data_;
     UavUwb uwb_data_;//ok
     UavStatus uav_status_;//ok
-    Imu imu_data_;
+    Imu imu_data_;//ok
+    MagRaw mag_data_;
+    RcData rc_data_;
+    MotorPwm pwm_data_;
 
     rclcpp::TimerBase::SharedPtr timer_100ms_;
     bool auto_stop_on_ = true;
@@ -209,10 +265,13 @@ private:
     unsigned int auto_stop_count_ = 0;
 
     rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr odom_publisher_;
-    rclcpp::Publisher<sensor_msgs::msg::Imu>::SharedPtr imu_publisher_;
+    //rclcpp::Publisher<sensor_msgs::msg::Imu>::SharedPtr imu_publisher_;
     rclcpp::Publisher<uav_msgs::msg::UavStatus>::SharedPtr status_publisher_;
     rclcpp::Publisher<uav_msgs::msg::UavUwb>::SharedPtr uwb_publisher_;
-
+    rclcpp::Publisher<uav_msgs::msg::Imu>::SharedPtr imu_publisher_;
+    rclcpp::Publisher<uav_msgs::msg::Mag>::SharedPtr mag_publisher_;
+    rclcpp::Publisher<uav_msgs::msg::Rc>::SharedPtr rc_publisher_;
+    rclcpp::Publisher<uav_msgs::msg::MotorPwm>::SharedPtr motorpwm_publisher_;
     rclcpp::Subscription<geometry_msgs::msg::Twist>::SharedPtr cmd_vel_subscription_;
    
     rclcpp::Service<originbot_msgs::srv::OriginbotBuzzer>::SharedPtr buzzer_service_;

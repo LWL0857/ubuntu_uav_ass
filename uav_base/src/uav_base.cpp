@@ -406,10 +406,19 @@ void UavBase::processImuData(DataFrame &frame)
     imu_data_.acc_x=acc_x.d;
     imu_data_.acc_y=acc_y.d;
     imu_data_.acc_z=acc_z.d;
-    imu_publisher()
+    imu_publisher();
 }
 void UavBase::processMagData(DataFrame &frame)
 {
+    DataFloat magraw_x,magraw_y,magraw_z;
+    memcpy(&magraw_x.data, &frame.data[0], 4);
+    memcpy(&magraw_y.data, &frame.data[4], 4);
+    memcpy(&magraw_z.data, &frame.data[8], 4);
+    mag_data_.magraw_x=magraw_x.d;
+    mag_data_.magraw_y=magraw_y.d;
+    mag_data_.magraw_z=magraw_z.d;
+    mag_publisher();
+
 
 }
     
@@ -426,7 +435,61 @@ void UavBase::processUwbData(DataFrame &frame)
     if(use_uwb_)
         uwb_publisher();
 }
+void processMotorPWMData(DataFrame &frame)
+{
+    memcpy(&pwm_data_.pwm_0,&frame.data[0],2);
+    memcpy(&pwm_data_.pwm_1,&frame.data[2],2);
+    memcpy(&pwm_data_.pwm_2,&frame.data[4],2);
+    memcpy(&pwm_data_.pwm_3,&frame.data[6],2);
+    /*
+    memcpy(&pwm_data_.pwm_4,&frame.data[8],2);
+    memcpy(&pwm_data_.pwm_5,&frame.data[10],2);
+    memcpy(&pwm_data_.pwm_6,&frame.data[12],2);
+    memcpy(&pwm_data_.pwm_7,&frame.data[14],2);
+    memcpy(&pwm_data_.pwm_8,&frame.data[16],2);
+    memcpy(&pwm_data_.pwm_9,&frame.data[18],2);
+    memcpy(&pwm_data_.pwm_10,&frame.data[20],2);
+    memcpy(&pwm_data_.pwm_11,&frame.data[22],2);
+    memcpy(&pwm_data_.pwm_12,&frame.data[24],2);
+    memcpy(&pwm_data_.pwm_13,&frame.data[26],2);
+    memcpy(&pwm_data_.pwm_14,&frame.data[28],2);
+    memcpy(&pwm_data_.pwm_15,&frame.data[2],2);
+    */
 
+
+    motorpwm_publisher();
+
+}
+void processRcData(DataFrame &frame)
+{
+    memcpy(&rc_data_.ppm_0,&frame.data[0],2);
+    memcpy(&rc_data_.ppm_1,&frame.data[2],2);
+    memcpy(&rc_data_.ppm_2,&frame.data[4],2);
+    memcpy(&rc_data_.ppm_3,&frame.data[6],2);
+    memcpy(&rc_data_.ppm_4,&frame.data[8],2);
+    memcpy(&rc_data_.ppm_5,&frame.data[10],2);
+    memcpy(&rc_data_.ppm_6,&frame.data[12],2);
+    memcpy(&rc_data_.ppm_7,&frame.data[14],2);
+
+    /*
+    memcpy(&pwm_data_.pwm_4,&frame.data[8],2);
+    memcpy(&pwm_data_.pwm_5,&frame.data[10],2);
+    memcpy(&pwm_data_.pwm_6,&frame.data[12],2);
+    memcpy(&pwm_data_.pwm_7,&frame.data[14],2);
+    memcpy(&pwm_data_.pwm_8,&frame.data[16],2);
+    memcpy(&pwm_data_.pwm_9,&frame.data[18],2);
+    memcpy(&pwm_data_.pwm_10,&frame.data[20],2);
+    memcpy(&pwm_data_.pwm_11,&frame.data[22],2);
+    memcpy(&pwm_data_.pwm_12,&frame.data[24],2);
+    memcpy(&pwm_data_.pwm_13,&frame.data[26],2);
+    memcpy(&pwm_data_.pwm_14,&frame.data[28],2);
+    memcpy(&pwm_data_.pwm_15,&frame.data[2],2);
+    */
+
+
+    rc_publisher();
+
+}
 void UavBase::processSensorData(DataFrame &frame)
 {
     robot_status_.battery_voltage = (float)frame.data[0] + ((float)frame.data[1]/100.0);
@@ -577,27 +640,13 @@ void UavBase::imu_publisher()
     imu_msg.header.frame_id = "imu_link";
     imu_msg.header.stamp = this->get_clock()->now();
 
-    imu_msg.acc_x = imu_data_.acceleration_x;
-    imu_msg.linear_acceleration.y = imu_data_.acceleration_y;
-    imu_msg.linear_acceleration.z = imu_data_.acceleration_z;
+    imu_msg.acc_x = imu_data_.acc_x;
+    imu_msg.acc_.y = imu_data_.acc_y;
+    imu_msg.acc_.z = imu_data_.acc_z;
 
-    imu_msg.angular_velocity.x = imu_data_.angular_x;
-    imu_msg.angular_velocity.y = imu_data_.angular_y;
-    imu_msg.angular_velocity.z = imu_data_.angular_z;
-
-    tf2::Quaternion q;
-    q.setRPY(imu_data_.roll, imu_data_.pitch, imu_data_.yaw);
-
-    imu_msg.orientation.x = q[0];
-    imu_msg.orientation.y = q[1];
-    imu_msg.orientation.z = q[2];
-    imu_msg.orientation.w = q[3];
-
-    imu_msg.linear_acceleration_covariance = {0.04, 0.00, 0.00, 0.00, 0.04, 0.00, 0.00, 0.00, 0.04};
-
-    imu_msg.angular_velocity_covariance = {0.02, 0.00, 0.00, 0.00, 0.02, 0.00, 0.00, 0.00, 0.02};
-
-    imu_msg.orientation_covariance = {0.0025, 0.0000, 0.0000, 0.0000, 0.0025, 0.0000, 0.0000, 0.0000, 0.0025};
+    imu_msg.gyro_x = imu_data_.gyro_x;
+    imu_msg.gyro_y = imu_data_.gyro_y;
+    imu_msg.gyro_z = imu_data_.gyro_z;
 
     // 发布IMU话题
     imu_publisher_->publish(imu_msg);
@@ -630,7 +679,51 @@ void UavBase::uwb_publisher()
 
     uwb_publisher_->publisher(uwb_msg);
 }
+void UavBase::mag_publisher()
+{
 
+    auto mag_msg=uav_msgs::msg::Mag();
+    mag_msg.header.frame_id = "mag_link";
+    mag_msg.header.stamp = this->get_clock()->now();
+    mag_msg.magraw_x=mag_data_.magraw_x;
+    mag_msg.magraw_x=mag_data_.magraw_x;
+    mag_msg.magraw_x=mag_data_.magraw_x;
+
+    mag_publisher_->publisher(mag_msg);
+
+}
+
+void UavBase::motorpwm_publisher()
+{
+    auto pwm_msg=uav_msgs::msg::MotorPwm();
+    pwm_msg.header.frame_id = "pwm_link";
+    pwm_msg.header.stamp = this->get_clock()->now();
+    pwm_msgs.pwm_0=pwm_data_.pwm_0;
+    pwm_msgs.pwm_1=pwm_data_.pwm_1;
+    pwm_msgs.pwm_2=pwm_data_.pwm_2;
+    pwm_msgs.pwm_3=pwm_data_.pwm_3;
+
+    pwm_publisher_->publisher(pwm_msg);
+
+
+}
+void UavBase::rc_publisher()
+{
+
+    auto rc_msg = uav_msgs::msg::MotorPwm();
+    rc_msg.header.frame_id = "pwm_link";
+    rc_msg.header.stamp = this->get_clock()->now();
+    rc_msgs.ppm_0 = rc_data_.ppm_0;
+    rc_msgs.ppm_1 = rc_data_.ppm_1;
+    rc_msgs.ppm_2 = rc_data_.ppm_2;
+    rc_msgs.ppm_3 = rc_data_.ppm_3;
+    rc_msgs.ppm_4 = rc_data_.ppm_4;
+    rc_msgs.ppm_5 = rc_data_.ppm_5;
+    rc_msgs.ppm_6 = rc_data_.ppm_6;
+    rc_msgs.ppm_7 = rc_data_.ppm_7;
+
+    rc_publisher_->publisher(rc_msg);
+}
 bool UavBase::imu_calibration()
 {
     DataFrame configFrame;
