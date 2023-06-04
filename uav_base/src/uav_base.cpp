@@ -508,7 +508,6 @@ void UavBase::processFlowData(DataFrame &frame)
     flow_data_.pos_x=pos_x.d;
     flow_data_.pos_y=pos_y.d;
     flow_data_.speed_x=speed_x.d;
-    
     flow_data_.speed_y=speed_y.d;
     flow_publisher();
 
@@ -754,7 +753,10 @@ void UavBase::flow_publisher()
 auto flow_msg = uav_msgs::msg::Flow();
     flow_msg.header.frame_id = "flow_link";
     flow_msg.header.stamp = this->get_clock()->now();
-
+    flow_msg.pos_x=flow_data_.pos_x;
+    flow_msg.pos_y=flow_data_.pos_y;
+    flow_msg.speed_x=flow_data_.speed_x;
+    flow_msg.speed_y=flow_data_.speed_y;
 
     flow_publisher_->publisher(flow_msg);
 }
