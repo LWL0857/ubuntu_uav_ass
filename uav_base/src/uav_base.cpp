@@ -246,6 +246,13 @@ void UavBase::processDataFrame(DataFrame &frame)
         break;
     case FRAME_ID_UWB:
         processUwbData(frame);
+        break; 
+    case FRAME_ID_RC:
+        processRcData(frame);
+        break;
+ case FRAME_ID_PWM:
+        processMotorPWMData(frame);
+        break;
     case FRAME_ID_VELOCITY:
         processVelocityData(frame);
         break;
@@ -490,6 +497,24 @@ void processRcData(DataFrame &frame)
     rc_publisher();
 
 }
+void UavBase::processFlowData(DataFrame &frame)
+{
+ 
+    DataFloat pos_x,pos_x,speed_x,speed_y;
+    memcpy(&pos_x.data, &frame.data[0], 4);
+    memcpy(&pos_y.data, &frame.data[4], 4);
+    memcpy(&speed_x.data, &frame.data[8], 4);
+    memcpy(&speed_y.data, &frame.data[12], 4);
+    flow_data_.pos_x=pos_x.d;
+    flow_data_.pos_y=pos_y.d;
+    flow_data_.speed_x=speed_x.d;
+    
+    flow_data_.speed_y=speed_y.d;
+    flow_publisher();
+
+
+
+}
 void UavBase::processSensorData(DataFrame &frame)
 {
     robot_status_.battery_voltage = (float)frame.data[0] + ((float)frame.data[1]/100.0);
@@ -724,6 +749,18 @@ void UavBase::rc_publisher()
 
     rc_publisher_->publisher(rc_msg);
 }
+void UavBase::flow_publisher()
+{
+auto flow_msg = uav_msgs::msg::Flow();
+    flow_msg.header.frame_id = "flow_link";
+    flow_msg.header.stamp = this->get_clock()->now();
+
+
+    flow_publisher_->publisher(flow_msg);
+}
+
+
+
 bool UavBase::imu_calibration()
 {
     DataFrame configFrame;

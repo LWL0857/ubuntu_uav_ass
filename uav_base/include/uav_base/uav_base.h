@@ -149,24 +149,34 @@ typedef struct
     uint16_t pwm_15;
     uint16_t pwm_16;
 } MotorPwm;
+typedef struct {
+    float32 pos_x;
+    float32 pos_y;
+    float32 speed_x;
+    float32 speed_y;
 
-
-
-enum {
-    FRAME_ID_MOTION       = 0x01,
-    FRAME_ID_VELOCITY     = 0x02,
+} FlowData;
+enum
+{
+    FRAME_ID_MOTION = 0x01,
+    FRAME_ID_VELOCITY = 0x02,
     FRAME_ID_ACCELERATION = 0x03,
-    FRAME_ID_ANGULAR      = 0x04,
-    FRAME_ID_EULER        = 0x05,
-    FRAME_ID_SENSOR       = 0x06,
-    FRAME_ID_HMI          = 0x07,
-    FRAME_ID_UWB          = 0x08,
-    FRAME_ID_MOCAP        = 0x09,
+    FRAME_ID_ANGULAR = 0x04,
+    FRAME_ID_EULER = 0x05,
+    FRAME_ID_SENSOR = 0x06,
+    FRAME_ID_HMI = 0x07,
+    FRAME_ID_UWB = 0x08,
+    FRAME_ID_MOCAP = 0x09,
 
-    FRAME_ID_STATUS       = 0x01,
-    FRAME_ID_IMU          = 0x02,
-    FRAME_ID_MAG          = 0x03,
-    FRAME_ID_UWB          = 0x04,   
+    FRAME_ID_STATUS = 0x01,
+    FRAME_ID_IMU = 0x02,
+    FRAME_ID_MAG = 0x03,
+    FRAME_ID_UWB = 0x04,
+    FRAME_ID_PWM = 0x05,
+    FRAME_ID_RC = 0x06,
+    FRAME_ID_FLOW = 0x07,
+
+
 };
 
 class UavBase : public rclcpp::Node
@@ -194,6 +204,8 @@ private:
     void processMagData(DataFrame &frame);
     void processMotorPWMData(DataFrame &frame);
     void processRcData(DataFrame &frame);
+    void processFlowData(DataFrame &frame);
+
 
 
 
@@ -208,6 +220,8 @@ private:
     void mag_publisher();
     void motorpwm_publisher();
     void rc_publisher();
+    void flow_publisher();
+
 
     bool buzzer_control(bool on);
     bool led_control(bool on);
@@ -255,6 +269,7 @@ private:
     MagRaw mag_data_;
     RcData rc_data_;
     MotorPwm pwm_data_;
+    FlowData flow_data_;
 
     rclcpp::TimerBase::SharedPtr timer_100ms_;
     bool auto_stop_on_ = true;
@@ -262,6 +277,7 @@ private:
     bool pub_odom_ = false;
     bool use_mocap_=false;
     bool use_uwb_=false;
+    bool use_flow_=false;
     unsigned int auto_stop_count_ = 0;
 
     rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr odom_publisher_;
@@ -271,7 +287,9 @@ private:
     rclcpp::Publisher<uav_msgs::msg::Imu>::SharedPtr imu_publisher_;
     rclcpp::Publisher<uav_msgs::msg::Mag>::SharedPtr mag_publisher_;
     rclcpp::Publisher<uav_msgs::msg::Rc>::SharedPtr rc_publisher_;
-    rclcpp::Publisher<uav_msgs::msg::MotorPwm>::SharedPtr motorpwm_publisher_;
+    
+    rclcpp::Publisher<uav_msgs::msg::MotorPwm>::SharedPtr motorpwm_publisher_;    
+    rclcpp::Publisher<uav_msgs::msg::Flow>::SharedPtr flow_publisher_;
     rclcpp::Subscription<geometry_msgs::msg::Twist>::SharedPtr cmd_vel_subscription_;
    
     rclcpp::Service<originbot_msgs::srv::OriginbotBuzzer>::SharedPtr buzzer_service_;
