@@ -113,8 +113,14 @@ UavBase::UavBase(std::string nodeName) : Node(nodeName)
     if(use_uwb_)
     {
         //创建uwB的话题发布者
-        uwb_publisher_ =this->create_publisher<uav_msgs::msg::uav_uwb>("uav_uwb",10)
+        uwb_publisher_ =this->create_publisher<uav_msgs::msg::UavUwb>("uav_uwb",10)
     }
+    if(use_flow_)
+    {
+        //创建uwB的话题发布者
+        flow_publisher_ =this->create_publisher<uav_msgs::msg::Flow >("flow",10)
+    }
+
     if(use_mocap_)
     {
         mocap_subscription_ = this->create_subscription<geometry_msgs::PoseStamped>(mocap_sub_name, 10,std::bind(&UavBase::mocap_pos_callback, this, _1));
@@ -509,7 +515,8 @@ void UavBase::processFlowData(DataFrame &frame)
     flow_data_.pos_y=pos_y.d;
     flow_data_.speed_x=speed_x.d;
     flow_data_.speed_y=speed_y.d;
-    flow_publisher();
+    if(use_flow_)
+        flow_publisher();
 
 
 
@@ -681,9 +688,9 @@ void UavBase::status_publisher()
     auto status_msg=uav_msgs::msg::UavStatus();
     status_msg.header.frame_id = "status_link";
     status_msg.header.stamp = this->get_clock()->now();
-    status_msg.ahrsEular_x = uav_status_.ahrsEular_x;
-    status_msg.ahrsEular_y = uav_status_.ahrsEular_y;
-    status_msg.ahrsEular_z = uav_status_.ahrsEular_z;
+    status_msg.ahrs_eular_x = uav_status_.ahrsEular_x;
+    status_msg.ahrs_eular_y = uav_status_.ahrsEular_y;
+    status_msg.ahrs_eular_z = uav_status_.ahrsEular_z;
     status_msg.height = uav_status_.height;
     status_msg.battery_voltage = uav_status_.voltage;
     status_msg.mode = uav_status_.mode;

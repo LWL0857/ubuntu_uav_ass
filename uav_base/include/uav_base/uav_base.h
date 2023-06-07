@@ -42,6 +42,11 @@ limitations under the License.
 #include "uav_msgs/srv/uav_mocap.hpp"
 #include "uav_msgs/srv/uav_uwb.hpp"
 #include "uav_msgs/msg/imu.hpp"
+#include "uav_msgs/msg/flow.hpp"
+#include "uav_msgs/msg/mag.hpp"
+#include "uav_msgs/msg/motor_pwm.hpp"
+#include "uav_msgs/msg/rc.hpp"
+
 //mocap数据类型
 #include "geometry_msgs/PoseStamped.h"
 
