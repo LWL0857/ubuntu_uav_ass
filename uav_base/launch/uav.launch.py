@@ -73,16 +73,14 @@ def generate_launch_description():
         
     return LaunchDescription([
         # use_sim_time_arg,
-       port_name_arg,
+         port_name_arg,
     #    correct_factor_vx_arg,
      #   correct_factor_vth_arg,
      #   auto_stop_on_arg,
-     
-        use_mocap_arg,
-      use_flow_arg,
-       use_uwb_arg,
-
-      uav_base_node
+         use_mocap_arg,
+         use_flow_arg,
+         use_uwb_arg,
+         uav_base_node
         
   ])
 
