@@ -62,9 +62,9 @@ void UavBase::uwb_publisher()
     auto uwb_msg=uav_msgs::msg::UavUwb();
     uwb_msg.header.frame_id = "uwb_link";
     uwb_msg.header.stamp = this->get_clock()->now();
-    uwb_msg.pos_x=uwb_data_.x;
-    uwb_msg.pos_y=uwb_data_.y;
-    uwb_msg.pos_z=uwb_data_.z
+    uwb_msg.pos_x=uwb_data_.pos_x;
+    uwb_msg.pos_y=uwb_data_.pos_y;
+    uwb_msg.pos_z=uwb_data_.pos_z
 
     uwb_publisher_->Publisher(uwb_msg);
 }
