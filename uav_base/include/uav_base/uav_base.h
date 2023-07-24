@@ -249,10 +249,6 @@ private:
 
    
 
-    float odom_x_=0.0, odom_y_=0.0, odom_th_=0.0;
-
-    float correct_factor_vx_ = 1.0;
-    float correct_factor_vth_ = 1.0;    
     
     std::shared_ptr<std::thread> read_data_thread_;
     //DataImu imu_data_;

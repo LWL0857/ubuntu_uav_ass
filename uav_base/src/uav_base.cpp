@@ -50,7 +50,7 @@ void UavBase::status_publisher()
     status_msg.ahrs_eular_y = uav_status_.ahrsEular_y;
     status_msg.ahrs_eular_z = uav_status_.ahrsEular_z;
     status_msg.height = uav_status_.height;
-    status_msg.battery_Voltage = uav_status_.voltage;
+    status_msg.battery_Voltage = uav_status_.Voltage;
     status_msg.mode = uav_status_.mode;
     status_msg.lock = uav_status_.lock;
 
