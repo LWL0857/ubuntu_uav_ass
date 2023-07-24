@@ -59,7 +59,7 @@ using std::placeholders::_2;
 //mocap uwb 数据都是float,4byte
 union DataFloat
 {
-    float d;
+    float f;
     unsigned char data[4];
 };
 // uav protocol data format
@@ -95,14 +95,14 @@ typedef struct{
 typedef struct {
     float magraw_x;
     float magraw_y;
-    float magraw_w;
+    float magraw_z;
 } MagRaw;
 typedef struct {
     float ahrsEular_x;
     float ahrsEular_y;
     float ahrsEular_z;
     float height;
-    float battery_voltage;
+    float battery_Voltage;
     uint8_t mode;
     uint8_t lock;
     bool buzzer_on;
@@ -260,8 +260,8 @@ private:
     UavStatus uav_status_;//ok
     Imu imu_data_;//ok
     MagRaw mag_data_;
-    RcData rc_data_;
-    MotorPwm pwm_data_;
+ extern   RcData rc_data_;
+ extern  MotorPwm pwm_data_;
     FlowData flow_data_;
 
     rclcpp::TimerBase::SharedPtr timer_100ms_;
@@ -285,10 +285,10 @@ private:
     rclcpp::Publisher<uav_msgs::msg::Flow>::SharedPtr flow_publisher_;
     rclcpp::Subscription<geometry_msgs::msg::Twist>::SharedPtr cmd_vel_subscription_;
    
-    rclcpp::Service<originbot_msgs::srv::OriginbotBuzzer>::SharedPtr buzzer_service_;
-    rclcpp::Service<originbot_msgs::srv::OriginbotLed>::SharedPtr led_service_;
-    rclcpp::Service<originbot_msgs::srv::OriginbotPID>::SharedPtr left_pid_service_;
-    rclcpp::Service<originbot_msgs::srv::OriginbotPID>::SharedPtr right_pid_service_;
+  //  rclcpp::Service<originbot_msgs::srv::OriginbotBuzzer>::SharedPtr buzzer_service_;
+    //rclcpp::Service<originbot_msgs::srv::OriginbotLed>::SharedPtr led_service_;
+   // rclcpp::Service<originbot_msgs::srv::OriginbotPID>::SharedPtr left_pid_service_;
+    //rclcpp::Service<originbot_msgs::srv::OriginbotPID>::SharedPtr right_pid_service_;
 
     std::unique_ptr<tf2_ros::TransformBroadcaster> tf_broadcaster_;
 };

@@ -15,6 +15,117 @@ limitations under the License.
 ***********************************************************************/
 /////sada
 #include "uav_base/uav_base.h"
+extern  MotorPwm pwm_data_;
+extern   RcData rc_data_;
+
+
+void UavBase::imu_publisher()
+{
+    //RCLCPP_INFO(this->get_logger(), "Imu Data Publish.");
+
+    // 封装IMU的话题消息
+    auto imu_msg = uav_msgs::msg::Imu();
+
+    imu_msg.header.frame_id = "imu_link";
+    imu_msg.header.stamp = this->get_clock()->now();
+
+    imu_msg.acc_x = imu_data_.acc_x;
+    imu_msg.acc_y = imu_data_.acc_y;
+    imu_msg.acc_z = imu_data_.acc_z;
+
+    imu_msg.gyro_x = imu_data_.gyro_x;
+    imu_msg.gyro_y = imu_data_.gyro_y;
+    imu_msg.gyro_z = imu_data_.gyro_z;
+
+    // 发布IMU话题
+    imu_publisher_->Publish(imu_msg);
+}
+
+void UavBase::status_publisher()
+{
+    auto status_msg=uav_msgs::msg::UavStatus();
+    status_msg.header.frame_id = "status_link";
+    status_msg.header.stamp = this->get_clock()->now();
+    status_msg.ahrs_eular_x = uav_status_.ahrsEular_x;
+    status_msg.ahrs_eular_y = uav_status_.ahrsEular_y;
+    status_msg.ahrs_eular_z = uav_status_.ahrsEular_z;
+    status_msg.height = uav_status_.height;
+    status_msg.battery_Voltage = uav_status_.voltage;
+    status_msg.mode = uav_status_.mode;
+    status_msg.lock = uav_status_.lock;
+
+    status_publisher_->Publish(status_msg);
+}
+void UavBase::uwb_publisher()
+{
+    //封装uwb的话题消息
+    auto uwb_msg=uav_msgs::msg::UavUwb();
+    uwb_msg.header.frame_id = "uwb_link";
+    uwb_msg.header.stamp = this->get_clock()->now();
+    uwb_msg.pos_x=uwb_data_.x;
+    uwb_msg.pos_y=uwb_data_.y;
+    uwb_msg.pos_z=uwb_data_.z
+
+    uwb_publisher_->Publisher(uwb_msg);
+}
+void UavBase::mag_publisher()
+{
+
+    auto mag_msg=uav_msgs::msg::Mag();
+    mag_msg.header.frame_id = "mag_link";
+    mag_msg.header.stamp = this->get_clock()->now();
+    mag_msg.magraw_x=mag_data_.magraw_x;
+    mag_msg.magraw_x=mag_data_.magraw_x;
+    mag_msg.magraw_x=mag_data_.magraw_x;
+
+    mag_publisher_->Publisher(mag_msg);
+
+}
+
+void UavBase::motorpwm_publisher()
+{
+    auto pwm_msg=uav_msgs::msg::MotorPwm();
+    pwm_msg.header.frame_id = "pwm_link";
+    pwm_msg.header.stamp = this->get_clock()->now();
+    pwm_msg.pwm_0=pwm_data_.pwm_0;
+    pwm_msg.pwm_1=pwm_data_.pwm_1;
+    pwm_msg.pwm_2=pwm_data_.pwm_2;
+    pwm_msg.pwm_3=pwm_data_.pwm_3;
+
+    motorpwm_publisher_->Publisher(pwm_msg);
+
+
+}
+void UavBase::rc_publisher()
+{
+
+    auto rc_msg = uav_msgs::msg::MotorPwm();
+    rc_msg.header.frame_id = "pwm_link";
+    rc_msg.header.stamp = this->get_clock()->now();
+    rc_msg.ppm_0 = rc_data_.ppm_0;
+    rc_msg.ppm_1 = rc_data_.ppm_1;
+    rc_msg.ppm_2 = rc_data_.ppm_2;
+    rc_msg.ppm_3 = rc_data_.ppm_3;
+    rc_msg.ppm_4 = rc_data_.ppm_4;
+    rc_msg.ppm_5 = rc_data_.ppm_5;
+    rc_msg.ppm_6 = rc_data_.ppm_6;
+    rc_msg.ppm_7 = rc_data_.ppm_7;
+
+    rc_publisher_->Publisher(rc_msg);
+}
+void UavBase::flow_publisher()
+{
+auto flow_msg = uav_msgs::msg::Flow();
+    flow_msg.header.frame_id = "flow_link";
+    flow_msg.header.stamp = this->get_clock()->now();
+    flow_msg.pos_x=flow_data_.pos_x;
+    flow_msg.pos_y=flow_data_.pos_y;
+    flow_msg.speed_x=flow_data_.speed_x;
+    flow_msg.speed_y=flow_data_.speed_y;
+
+    flow_publisher_->publisher(flow_msg);
+}
+
 
 UavBase::UavBase(std::string nodeName) : Node(nodeName)
 {
@@ -65,10 +176,10 @@ UavBase::UavBase(std::string nodeName) : Node(nodeName)
     cmd_vel_subscription_ = this->create_subscription<geometry_msgs::msg::Twist>("cmd_vel", 10, std::bind(&UavBase::cmd_vel_callback, this, _1));
     
     // 创建控制蜂鸣器和LED的服务
-    buzzer_service_ = this->create_service<uav_msgs::srv::UavBuzzer>("uav_buzzer", std::bind(&UavBase::buzzer_callback, this, _1, _2));
-    led_service_ = this->create_service<uav_msgs::srv::UavLed>("uav_led", std::bind(&UavBase::led_callback, this, _1, _2));
-    left_pid_service_ = this->create_service<uav_msgs::srv::UavPID>("uav_left_pid", std::bind(&UavBase::left_pid_callback, this, _1, _2));
-    right_pid_service_ = this->create_service<uav_msgs::srv::UavPID>("uav_right_pid", std::bind(&UavBase::right_pid_callback, this, _1, _2));
+    //buzzer_service_ = this->create_service<uav_msgs::srv::UavBuzzer>("uav_buzzer", std::bind(&UavBase::buzzer_callback, this, _1, _2));
+    //led_service_ = this->create_service<uav_msgs::srv::UavLed>("uav_led", std::bind(&UavBase::led_callback, this, _1, _2));
+    //left_pid_service_ = this->create_service<uav_msgs::srv::UavPID>("uav_left_pid", std::bind(&UavBase::left_pid_callback, this, _1, _2));
+    //right_pid_service_ = this->create_service<uav_msgs::srv::UavPID>("uav_right_pid", std::bind(&UavBase::right_pid_callback, this, _1, _2));
 
     // 创建TF广播器
     tf_broadcaster_ = std::make_unique<tf2_ros::TransformBroadcaster>(*this);
@@ -103,40 +214,42 @@ UavBase::UavBase(std::string nodeName) : Node(nodeName)
         imu_publisher_    = this->create_publisher<sensor_msgs::msg::Imu>("imu", 10);
 
         // IMU初始化标定
+       /*
         if(imu_calibration())
         {
             usleep(500000);    //确保标定完成
             RCLCPP_INFO(this->get_logger(), "IMU calibration ok.");
         }
+        */
     }
 
     if(use_uwb_)
     {
         //创建uwB的话题发布者
-        uwb_publisher_ =this->create_publisher<uav_msgs::msg::UavUwb>("uav_uwb",10)
+        uwb_publisher_ =this->create_publisher<uav_msgs::msg::UavUwb>("uav_uwb",10);
     }
     if(use_flow_)
     {
         //创建uwB的话题发布者
-        flow_publisher_ =this->create_publisher<uav_msgs::msg::Flow >("flow",10)
+        flow_publisher_ =this->create_publisher<uav_msgs::msg::Flow >("flow",10);
     }
 
     if(use_mocap_)
     {
-        mocap_subscription_ = this->create_subscription<geometry_msgs::PoseStamped>(mocap_sub_name, 10,std::bind(&UavBase::mocap_pos_callback, this, _1));
+        mocap_subscription_ = this->create_subscription<geometry_msgs::msg::PoseStamped>(mocap_sub_name, 10,std::bind(&UavBase::mocap_pos_callback, this, _1));
 
     }
     // 设置LED灯的初始状态
-    robot_status_.led_on = true;
+   // robot_status_.led_on = true;
 
     // 启动一个100ms的定时器，处理订阅者之外的其他信息
-    timer_100ms_ = this->create_wall_timer(
-      100ms, std::bind(&UavBase::timer_100ms_callback, this));
+   // timer_100ms_ = this->create_wall_timer(
+    //  100ms, std::bind(&UavBase::timer_100ms_callback, this));
 
     // 初始化完成，蜂鸣器响1s，并输出日志
-    buzzer_control(true);
-    usleep(500000);
-    buzzer_control(false);
+   // buzzer_control(true);
+   // usleep(500000);
+   // buzzer_control(false);
 
     RCLCPP_INFO(this->get_logger(), "Uav Start, enjoy it.");
 }
@@ -215,9 +328,9 @@ void UavBase::readRawData()
 
 bool UavBase::checkDataFrame(DataFrame &frame)
 {    
-    int len=frame.legnth;
+    int len=frame.length;
     uint8_t sum=0;
-    for(int i<0;i<len;i++)
+    for(int i=0;i<len;i++)
     {   
         sum+=frame.data[i];
 
@@ -308,7 +421,7 @@ void UavBase::processStatusData(DataFrame &frame)
    
     status_publisher();    
 }
-
+/*
 void UavBase::processVelocityData(DataFrame &frame)
 {
     //RCLCPP_INFO(this->get_logger(), "Process velocity data");
@@ -412,7 +525,7 @@ void UavBase::processEulerData(DataFrame &frame)
     if(use_imu_)
         imu_publisher();
 }
-
+*/
 void UavBase::processImuData(DataFrame &frame)
 {
     DataFloat acc_x,acc_y,acc_z,gyro_x,gyro_y,gyro_z;
@@ -433,9 +546,9 @@ void UavBase::processMagData(DataFrame &frame)
     memcpy(&magraw_x.data, &frame.data[0], 4);
     memcpy(&magraw_y.data, &frame.data[4], 4);
     memcpy(&magraw_z.data, &frame.data[8], 4);
-    mag_data_.magraw_x=magraw_x.d;
-    mag_data_.magraw_y=magraw_y.d;
-    mag_data_.magraw_z=magraw_z.d;
+    mag_data_.magraw_x=magraw_x.f;
+    mag_data_.magraw_y=magraw_y.f;
+    mag_data_.magraw_z=magraw_z.f;
     mag_publisher();
 
 
@@ -448,9 +561,9 @@ void UavBase::processUwbData(DataFrame &frame)
     memcpy(&uwb_x.data,&frame.data[0],4);
     memcpy(&uwb_y.data,&frame.data[4],4);
     memcpy(&uwb_z.data,&frame.data[8],4);
-    uwb_data_.x=uwb_x.d;
-    uwb_data_.y=uwb_y.d;
-    uwb_data_.z=uwb_z.d;
+    uwb_data_.pos_x=uwb_x.f;
+    uwb_data_.pos_y=uwb_y.f;
+    uwb_data_.pos_z=uwb_z.f;
     if(use_uwb_)
         uwb_publisher();
 }
@@ -474,7 +587,6 @@ void processMotorPWMData(DataFrame &frame)
     memcpy(&pwm_data_.pwm_14,&frame.data[28],2);
     memcpy(&pwm_data_.pwm_15,&frame.data[2],2);
     */
-
 
     motorpwm_publisher();
 
@@ -512,121 +624,22 @@ void processRcData(DataFrame &frame)
 void UavBase::processFlowData(DataFrame &frame)
 {
  
-    DataFloat pos_x,pos_x,speed_x,speed_y;
-    memcpy(&pos_x.data, &frame.data[0], 4);
-    memcpy(&pos_y.data, &frame.data[4], 4);
+    DataFloat pos_x_,pos_x_,speed_x,speed_y;
+    memcpy(&pos_x_.data, &frame.data[0], 4);
+    memcpy(&pos_y_.data, &frame.data[4], 4);
     memcpy(&speed_x.data, &frame.data[8], 4);
     memcpy(&speed_y.data, &frame.data[12], 4);
-    flow_data_.pos_x=pos_x.d;
-    flow_data_.pos_y=pos_y.d;
-    flow_data_.speed_x=speed_x.d;
-    flow_data_.speed_y=speed_y.d;
+    flow_data_.pos_x=pos_x_.f;
+    flow_data_.pos_y=pos_y_.f;
+    flow_data_.speed_x=speed_x.f;
+    flow_data_.speed_y=speed_y.f;
     if(use_flow_)
         flow_publisher();
 
 
 
 }
-void UavBase::processSensorData(DataFrame &frame)
-{
-    robot_status_.battery_voltage = (float)frame.data[0] + ((float)frame.data[1]/100.0);
 
-    // RCLCPP_INFO(this->get_logger(), "Battery Voltage: %0.2f", (float)frame.data[0] + ((float)frame.data[1]/100.0));
-}
-
-void UavBase::odom_publisher(float vx, float vth)
-{
-    auto odom_msg = nav_msgs::msg::Odometry();
-
-    //里程数据计算
-    odom_msg.header.frame_id = "odom";
-    odom_msg.header.stamp = this->get_clock()->now();
-    odom_msg.pose.pose.position.x = odom_x_;
-    odom_msg.pose.pose.position.y = odom_y_;
-    odom_msg.pose.pose.position.z = 0;
-
-    tf2::Quaternion q;
-    q.setRPY(0, 0, odom_th_);
-    odom_msg.child_frame_id = "base_footprint";
-    odom_msg.pose.pose.orientation.x = q[0];
-    odom_msg.pose.pose.orientation.y = q[1];
-    odom_msg.pose.pose.orientation.z = q[2];
-    odom_msg.pose.pose.orientation.w = q[3];
-
-    const double odom_pose_covariance[36] = {1e-3, 0, 0, 0, 0, 0,
-
-                                             0, 1e-3, 0, 0, 0, 0,
-
-                                             0, 0, 1e6, 0, 0, 0,
-                                             0, 0, 0, 1e6, 0, 0,
-
-                                             0, 0, 0, 0, 1e6, 0,
-
-                                             0, 0, 0, 0, 0, 1e-9};
-    const double odom_pose_covariance2[36]= {1e-9,    0,    0,   0,   0,    0,
-										      0, 1e-3, 1e-9,   0,   0,    0,
-										      0,    0,  1e6,   0,   0,    0,
-										      0,    0,    0, 1e6,   0,    0,
-										      0,    0,    0,   0, 1e6,    0,
-										      0,    0,    0,   0,   0, 1e-9 };
-
-    odom_msg.twist.twist.linear.x = vx;
-    odom_msg.twist.twist.linear.y = 0.00;
-    odom_msg.twist.twist.linear.z = 0.00;
-
-    odom_msg.twist.twist.angular.x = 0.00;
-    odom_msg.twist.twist.angular.y = 0.00;
-    odom_msg.twist.twist.angular.z = vth;
-
-    const double odom_twist_covariance[36] = {1e-3, 0, 0, 0, 0, 0,
-                                              0, 1e-3, 1e-9, 0, 0, 0,
-
-                                              0, 0, 1e6, 0, 0, 0,
-
-                                              0, 0, 0, 1e6, 0, 0,
-
-                                              0, 0, 0, 0, 1e6, 0,
-
-                                              0, 0, 0, 0, 0, 1e-9};
-    const double odom_twist_covariance2[36] = {1e-9,    0,    0,   0,   0,    0, 
-                                        0, 1e-3, 1e-9,   0,   0,    0,
-                                        0,    0,  1e6,   0,   0,    0,
-                                        0,    0,    0, 1e6,   0,    0,
-                                        0,    0,    0,   0, 1e6,    0,
-                                        0,    0,    0,   0,   0, 1e-9};
-
-    // RCLCPP_INFO(this->get_logger(), "%f %f %f",x,y,th);
-
-    if (vx == 0 && vth == 0)
-        memcpy(&odom_msg.pose.covariance, odom_pose_covariance2, sizeof(odom_pose_covariance2)),
-            memcpy(&odom_msg.twist.covariance, odom_twist_covariance2, sizeof(odom_twist_covariance2));
-    else
-        memcpy(&odom_msg.pose.covariance, odom_pose_covariance, sizeof(odom_pose_covariance)),
-            memcpy(&odom_msg.twist.covariance, odom_twist_covariance, sizeof(odom_twist_covariance));
-
-    // 发布里程计话题
-    odom_publisher_->publish(odom_msg);
-
-    geometry_msgs::msg::TransformStamped t;
-
-    t.header.stamp = this->get_clock()->now();
-    t.header.frame_id = "odom";
-    t.child_frame_id  = "base_footprint";
-
-    t.transform.translation.x = odom_x_;
-    t.transform.translation.y = odom_y_;
-    t.transform.translation.z = 0.0;
-
-    t.transform.rotation.x = q[0];
-    t.transform.rotation.y = q[1];
-    t.transform.rotation.z = q[2];
-    t.transform.rotation.w = q[3];
-
-    if(pub_odom_){
-        // 广播里程计TF
-        tf_broadcaster_->sendTransform(t);
-    }
-}
 
 /*
 void UavBase::imu_publisher()
@@ -667,112 +680,7 @@ void UavBase::imu_publisher()
 
 
 */
-void UavBase::imu_publisher()
-{
-    //RCLCPP_INFO(this->get_logger(), "Imu Data Publish.");
 
-    // 封装IMU的话题消息
-    auto imu_msg = uav_msgs::msg::Imu();
-
-    imu_msg.header.frame_id = "imu_link";
-    imu_msg.header.stamp = this->get_clock()->now();
-
-    imu_msg.acc_x = imu_data_.acc_x;
-    imu_msg.acc_.y = imu_data_.acc_y;
-    imu_msg.acc_.z = imu_data_.acc_z;
-
-    imu_msg.gyro_x = imu_data_.gyro_x;
-    imu_msg.gyro_y = imu_data_.gyro_y;
-    imu_msg.gyro_z = imu_data_.gyro_z;
-
-    // 发布IMU话题
-    imu_publisher_->publish(imu_msg);
-}
-
-void UavBase::status_publisher()
-{
-    auto status_msg=uav_msgs::msg::UavStatus();
-    status_msg.header.frame_id = "status_link";
-    status_msg.header.stamp = this->get_clock()->now();
-    status_msg.ahrs_eular_x = uav_status_.ahrsEular_x;
-    status_msg.ahrs_eular_y = uav_status_.ahrsEular_y;
-    status_msg.ahrs_eular_z = uav_status_.ahrsEular_z;
-    status_msg.height = uav_status_.height;
-    status_msg.battery_voltage = uav_status_.voltage;
-    status_msg.mode = uav_status_.mode;
-    status_msg.lock = uav_status_.lock;
-
-    status_publisher_->publish(status_msg);
-}
-void UavBase::uwb_publisher()
-{
-    //封装uwb的话题消息
-    auto uwb_msg=uav_msgs::msg::UavUwb();
-    uwb_msg.header.frame_id = "uwb_link";
-    uwb_msg.header.stamp = this->get_clock()->now();
-    uwb_msg.x=uwb_data_.x;
-    uwb_msg.y=uwb_data_.y;
-    uwb_msg.z=uwb_data_.z
-
-    uwb_publisher_->publisher(uwb_msg);
-}
-void UavBase::mag_publisher()
-{
-
-    auto mag_msg=uav_msgs::msg::Mag();
-    mag_msg.header.frame_id = "mag_link";
-    mag_msg.header.stamp = this->get_clock()->now();
-    mag_msg.magraw_x=mag_data_.magraw_x;
-    mag_msg.magraw_x=mag_data_.magraw_x;
-    mag_msg.magraw_x=mag_data_.magraw_x;
-
-    mag_publisher_->publisher(mag_msg);
-
-}
-
-void UavBase::motorpwm_publisher()
-{
-    auto pwm_msg=uav_msgs::msg::MotorPwm();
-    pwm_msg.header.frame_id = "pwm_link";
-    pwm_msg.header.stamp = this->get_clock()->now();
-    pwm_msgs.pwm_0=pwm_data_.pwm_0;
-    pwm_msgs.pwm_1=pwm_data_.pwm_1;
-    pwm_msgs.pwm_2=pwm_data_.pwm_2;
-    pwm_msgs.pwm_3=pwm_data_.pwm_3;
-
-    pwm_publisher_->publisher(pwm_msg);
-
-
-}
-void UavBase::rc_publisher()
-{
-
-    auto rc_msg = uav_msgs::msg::MotorPwm();
-    rc_msg.header.frame_id = "pwm_link";
-    rc_msg.header.stamp = this->get_clock()->now();
-    rc_msgs.ppm_0 = rc_data_.ppm_0;
-    rc_msgs.ppm_1 = rc_data_.ppm_1;
-    rc_msgs.ppm_2 = rc_data_.ppm_2;
-    rc_msgs.ppm_3 = rc_data_.ppm_3;
-    rc_msgs.ppm_4 = rc_data_.ppm_4;
-    rc_msgs.ppm_5 = rc_data_.ppm_5;
-    rc_msgs.ppm_6 = rc_data_.ppm_6;
-    rc_msgs.ppm_7 = rc_data_.ppm_7;
-
-    rc_publisher_->publisher(rc_msg);
-}
-void UavBase::flow_publisher()
-{
-auto flow_msg = uav_msgs::msg::Flow();
-    flow_msg.header.frame_id = "flow_link";
-    flow_msg.header.stamp = this->get_clock()->now();
-    flow_msg.pos_x=flow_data_.pos_x;
-    flow_msg.pos_y=flow_data_.pos_y;
-    flow_msg.speed_x=flow_data_.speed_x;
-    flow_msg.speed_y=flow_data_.speed_y;
-
-    flow_publisher_->publisher(flow_msg);
-}
 
 
 
