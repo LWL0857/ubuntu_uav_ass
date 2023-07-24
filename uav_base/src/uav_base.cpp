@@ -99,7 +99,7 @@ void UavBase::motorpwm_publisher()
 void UavBase::rc_publisher()
 {
 
-    auto rc_msg = uav_msgs::msg::MotorPwm();
+    auto rc_msg = uav_msgs::msg::Rc();
     rc_msg.header.frame_id = "pwm_link";
     rc_msg.header.stamp = this->get_clock()->now();
     rc_msg.ppm_0 = rc_data_.ppm_0;
