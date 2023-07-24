@@ -256,10 +256,15 @@ void UavBase::processDataFrame(DataFrame &frame)
     case FRAME_ID_RC:
         processRcData(frame);
         break;
- case FRAME_ID_PWM:
+    case FRAME_ID_PWM:
         processMotorPWMData(frame);
         break;
-    case FRAME_ID_VELOCITY:
+        
+    case FRAME_ID_FLOW:
+        processFlowData(frame);
+        break;
+
+/*    case FRAME_ID_VELOCITY:
         processVelocityData(frame);
         break;
     case FRAME_ID_ACCELERATION:
@@ -276,6 +281,7 @@ void UavBase::processDataFrame(DataFrame &frame)
         break;
     case FRAME_ID_UWB:
         processUwbData(frame);
+        */
     default:
         RCLCPP_ERROR(this->get_logger(), "Frame ID Error[%d]", frame.id);
         break;
@@ -946,6 +952,7 @@ bool UavBase::buzzer_control(bool on)
 
     return true;
 }
+/*
 
 void UavBase::buzzer_callback(const std::shared_ptr<uav_msgs::srv::UavBuzzer::Request>  request,
                                           std::shared_ptr<uav_msgs::srv::UavBuzzer::Response> response)
@@ -963,7 +970,8 @@ void UavBase::buzzer_callback(const std::shared_ptr<uav_msgs::srv::UavBuzzer::Re
         response->result = false;        
     }
 }
-
+*/
+/*
 bool UavBase::led_control(bool on)
 {
     DataFrame configFrame;
@@ -1150,7 +1158,7 @@ void UavBase::timer_100ms_callback()
 
     status_publisher_->publish(status_msg);
 }
-
+*/
 void sigintHandler(int sig)
 {
     sig = sig;

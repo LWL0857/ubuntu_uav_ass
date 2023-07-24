@@ -33,14 +33,14 @@ limitations under the License.
 
 #include <tf2/LinearMath/Quaternion.h>
 #include <tf2_ros/transform_broadcaster.h>
-#include <geometry_msgs/msg/transform_stamped.hpp>
+#include "geometry_msgs/msg/pose_stamped.hpp"
 
 #include "uav_msgs/msg/uav_status.hpp"
 #include "uav_msgs/srv/uav_led.hpp"
 #include "uav_msgs/srv/uav_buzzer.hpp"
 #include "uav_msgs/srv/uav_pid.hpp"
-#include "uav_msgs/srv/uav_mocap.hpp"
-#include "uav_msgs/srv/uav_uwb.hpp"
+#include "uav_msgs/msg/uav_mocap.hpp"
+#include "uav_msgs/msg/uav_uwb.hpp"
 #include "uav_msgs/msg/imu.hpp"
 #include "uav_msgs/msg/flow.hpp"
 #include "uav_msgs/msg/mag.hpp"
@@ -48,7 +48,7 @@ limitations under the License.
 #include "uav_msgs/msg/rc.hpp"
 
 //mocap数据类型
-#include "geometry_msgs/PoseStamped.h"
+
 
 using namespace std::chrono_literals;
 using std::placeholders::_1;
@@ -85,24 +85,24 @@ typedef struct {
     float yaw;
 } DataImu;
 typedef struct{
-    float32 acc_x;
-    float32 acc_y;
-    float32 acc_z;
-    float32 gyro_x;
-    float32 gyro_y;
-    float32 gyro_z;
+    float acc_x;
+    float acc_y;
+    float acc_z;
+    float gyro_x;
+    float gyro_y;
+    float gyro_z;
 } Imu;
 typedef struct {
-    float32 magraw_x;
-    float32 magraw_y;
-    float32 magraw_w;
+    float magraw_x;
+    float magraw_y;
+    float magraw_w;
 } MagRaw;
 typedef struct {
-    float32 ahrsEular_x;
-    float32 ahrsEular_y;
-    float32 ahrsEular_z;
-    float32 height;
-    float32 battery_voltage;
+    float ahrsEular_x;
+    float ahrsEular_y;
+    float ahrsEular_z;
+    float height;
+    float battery_voltage;
     uint8_t mode;
     uint8_t lock;
     bool buzzer_on;
@@ -110,9 +110,9 @@ typedef struct {
 } UavStatus;
 
 typedef struct {
-    float32 pos_x;
-    float32 pos_y;
-    float32 pos_z;
+    float pos_x;
+    float pos_y;
+    float pos_z;
 } UavUwb ;
 typedef struct
 {
@@ -155,14 +155,15 @@ typedef struct
     uint16_t pwm_16;
 } MotorPwm;
 typedef struct {
-    float32 pos_x;
-    float32 pos_y;
-    float32 speed_x;
-    float32 speed_y;
+    float pos_x;
+    float pos_y;
+    float speed_x;
+    float speed_y;
 
 } FlowData;
 enum
 {
+    /*
     FRAME_ID_MOTION = 0x01,
     FRAME_ID_VELOCITY = 0x02,
     FRAME_ID_ACCELERATION = 0x03,
@@ -172,7 +173,7 @@ enum
     FRAME_ID_HMI = 0x07,
     FRAME_ID_UWB = 0x08,
     FRAME_ID_MOCAP = 0x09,
-
+    */
     FRAME_ID_STATUS = 0x01,
     FRAME_ID_IMU = 0x02,
     FRAME_ID_MAG = 0x03,
@@ -227,19 +228,6 @@ private:
     void rc_publisher();
     void flow_publisher();
 
-
-    bool buzzer_control(bool on);
-    bool led_control(bool on);
-
-    void cmd_vel_callback(const geometry_msgs::msg::Twist::SharedPtr msg);
-    void buzzer_callback(const std::shared_ptr<Uav_msgs::srv::UavBuzzer::Request>  request,
-                               std::shared_ptr<Uav_msgs::srv::UavBuzzer::Response> response);
-    void led_callback(const std::shared_ptr<Uav_msgs::srv::UavLed::Request>  request,
-                            std::shared_ptr<Uav_msgs::srv::UavLed::Response> response);
-    void left_pid_callback(const std::shared_ptr<Uav_msgs::srv::UavPID::Request>  request,
-                            std::shared_ptr<Uav_msgs::srv::UavPID::Response> response);
-    void right_pid_callback(const std::shared_ptr<Uav_msgs::srv::UavPID::Request>  request,
-                            std::shared_ptr<Uav_msgs::srv::UavPID::Response> response);
 
     void timer_100ms_callback();
 
