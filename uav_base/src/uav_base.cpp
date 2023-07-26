@@ -1,4 +1,3 @@
-
 #include "uav_base/uav_base.h"
 extern  MotorPwm pwm_data_;
 extern   RcData rc_data_;
@@ -6,8 +5,7 @@ extern   RcData rc_data_;
 
 void UavBase::imu_publisher()
 {
-    //RCLCPP_INFO(this->get_logger(), "Imu Data Publish.");
-
+    RCLCPP_INFO(this->get_logger(), "Imu Data Publish.");
     // 封装IMU的话题消息
     auto imu_msg = uav_msgs::msg::Imu();
 
@@ -28,6 +26,7 @@ void UavBase::imu_publisher()
 
 void UavBase::status_publisher()
 {
+    RCLCPP_INFO(this->get_logger(), "STATUS Data Publish.");
     auto status_msg=uav_msgs::msg::UavStatus();
     status_msg.header.frame_id = "status_link";
     status_msg.header.stamp = this->get_clock()->now();
@@ -43,6 +42,7 @@ void UavBase::status_publisher()
 }
 void UavBase::uwb_publisher()
 {
+    RCLCPP_INFO(this->get_logger(), "UWB Data Publish.");
     //封装uwb的话题消息
     auto uwb_msg=uav_msgs::msg::UavUwb();
     uwb_msg.header.frame_id = "uwb_link";
@@ -55,6 +55,7 @@ void UavBase::uwb_publisher()
 }
 void UavBase::mag_publisher()
 {
+    RCLCPP_INFO(this->get_logger(), "MAG Data Publish.");
 
     auto mag_msg=uav_msgs::msg::Mag();
     mag_msg.header.frame_id = "mag_link";
@@ -69,6 +70,7 @@ void UavBase::mag_publisher()
 
 void UavBase::motorpwm_publisher()
 {
+    RCLCPP_INFO(this->get_logger(), "MOTOR_PWM Data Publish.");
     auto pwm_msg=uav_msgs::msg::MotorPwm();
     pwm_msg.header.frame_id = "pwm_link";
     pwm_msg.header.stamp = this->get_clock()->now();
@@ -83,6 +85,7 @@ void UavBase::motorpwm_publisher()
 }
 void UavBase::rc_publisher()
 {
+    RCLCPP_INFO(this->get_logger(), "RC Data Publish.");
 
     auto rc_msg = uav_msgs::msg::Rc();
     rc_msg.header.frame_id = "pwm_link";
@@ -100,9 +103,12 @@ void UavBase::rc_publisher()
 }
 void UavBase::flow_publisher()
 {
-auto flow_msg = uav_msgs::msg::Flow();
+    RCLCPP_INFO(this->get_logger(), "FLOW Data Publish.");
+    auto flow_msg = uav_msgs::msg::Flow();
+    
     flow_msg.header.frame_id = "flow_link";
     flow_msg.header.stamp = this->get_clock()->now();
+    
     flow_msg.pos_x=flow_data_.pos_x;
     flow_msg.pos_y=flow_data_.pos_y;
     flow_msg.speed_x=flow_data_.speed_x;
@@ -115,7 +121,6 @@ auto flow_msg = uav_msgs::msg::Flow();
 UavBase::UavBase(std::string nodeName) : Node(nodeName)
 {
     // 加载参数
-
     std::string port_name="ttyS3";    
     this->declare_parameter("port_name");           //声明及获取串口号参数
     this->get_parameter_or<std::string>("port_name", port_name, "ttyS3");
@@ -123,9 +128,11 @@ UavBase::UavBase(std::string nodeName) : Node(nodeName)
     std::string mocap_sub_name="vrpn_client_node/RigidBody/pose";
     this->declare_parameter("mocap_sub_name");
     this->get_parameter_or<std::string>("mocap_sub_name",mocap_sub_name,"vrpn_client_node/RigidBody/pose");
-    this->declare_parameter("use_imu");             //声明是否使用imu
+
+    this->declare_parameter("use_imu");            
     this->declare_parameter("use_uwb");
     this->declare_parameter("use_mocap");
+
     this->get_parameter_or<bool>("use_uwb",use_uwb_,false);
     this->get_parameter_or<bool>("use_mocap",use_mocap_,false);
     this->get_parameter_or<bool>("use_imu", use_imu_, false);
@@ -203,18 +210,7 @@ UavBase::UavBase(std::string nodeName) : Node(nodeName)
         //mocap_subscription_ = this->create_subscription<geometry_msgs::msg::PoseStamped>(mocap_sub_name, 10,std::bind(&UavBase::mocap_pos_callback, this, _1));
 
     }
-    // 设置LED灯的初始状态
-   // robot_status_.led_on = true;
-
-    // 启动一个100ms的定时器，处理订阅者之外的其他信息
-   // timer_100ms_ = this->create_wall_timer(
-    //  100ms, std::bind(&UavBase::timer_100ms_callback, this));
-
-    // 初始化完成，蜂鸣器响1s，并输出日志
-   // buzzer_control(true);
-   // usleep(500000);
-   // buzzer_control(false);
-
+   
     RCLCPP_INFO(this->get_logger(), "Uav Start, enjoy it.");
 }
 
@@ -348,19 +344,22 @@ void UavBase::processDataFrame(DataFrame &frame)
 
 void UavBase::processStatusData(DataFrame &frame)
 {
-    //RCLCPP_INFO(this->get_logger(), "Process status data");
+    RCLCPP_INFO(this->get_logger(), "Process status data");
 
     DataFloat ahrsEular_x,ahrsEular_y,ahrsEular_z,height,battery_voltage;
+
     memcpy(&ahrsEular_x.data,&frame.data[0],4);
     memcpy(&ahrsEular_y.data,&frame.data[4],4);
     memcpy(&ahrsEular_z.data,&frame.data[8],4);
     memcpy(&height.data,&frame.data[12],4);
     memcpy(&battery_voltage.data,&frame.data[16],4);
+
     uav_status_.ahrsEular_x=ahrsEular_x.f;
     uav_status_.ahrsEular_y=ahrsEular_y.f;
     uav_status_.ahrsEular_z=ahrsEular_z.f;
     uav_status_.height=height.f;
     uav_status_.battery_voltage=battery_voltage.f;
+
     memcpy(&uav_status_.mode,&frame.data[20],4);
     memcpy(&uav_status_.lock,&frame.data[21],4);
    
@@ -369,6 +368,7 @@ void UavBase::processStatusData(DataFrame &frame)
 
 void UavBase::processImuData(DataFrame &frame)
 {
+    RCLCPP_INFO(this->get_logger(), "Process IMU data");
     DataFloat acc_x,acc_y,acc_z,gyro_x,gyro_y,gyro_z;
     memcpy(&acc_x.data, &frame.data[0], 4);
     memcpy(&acc_y.data, &frame.data[4], 4);
@@ -383,6 +383,8 @@ void UavBase::processImuData(DataFrame &frame)
 }
 void UavBase::processMagData(DataFrame &frame)
 {
+    RCLCPP_INFO(this->get_logger(), "Process MAG data");
+
     DataFloat magraw_x,magraw_y,magraw_z;
     memcpy(&magraw_x.data, &frame.data[0], 4);
     memcpy(&magraw_y.data, &frame.data[4], 4);
@@ -398,6 +400,7 @@ void UavBase::processMagData(DataFrame &frame)
 
 void UavBase::processUwbData(DataFrame &frame)
 {
+    RCLCPP_INFO(this->get_logger(), "Process UWB data");
     DataFloat uwb_x,uwb_y,uwb_z;
     memcpy(&uwb_x.data,&frame.data[0],4);
     memcpy(&uwb_y.data,&frame.data[4],4);
@@ -410,6 +413,7 @@ void UavBase::processUwbData(DataFrame &frame)
 }
 void UavBase::processMotorPWMData(DataFrame &frame)
 {
+    RCLCPP_INFO(this->get_logger(), "Process MOTOR PWM data");
     memcpy(&pwm_data_.pwm_0,&frame.data[0],2);
     memcpy(&pwm_data_.pwm_1,&frame.data[2],2);
     memcpy(&pwm_data_.pwm_2,&frame.data[4],2);
@@ -419,6 +423,7 @@ void UavBase::processMotorPWMData(DataFrame &frame)
 }
 void UavBase::processRcData(DataFrame &frame)
 {
+    RCLCPP_INFO(this->get_logger(), "Process RC data");
     memcpy(&rc_data_.ppm_0,&frame.data[0],2);
     memcpy(&rc_data_.ppm_1,&frame.data[2],2);
     memcpy(&rc_data_.ppm_2,&frame.data[4],2);
@@ -432,7 +437,7 @@ void UavBase::processRcData(DataFrame &frame)
 }
 void UavBase::processFlowData(DataFrame &frame)
 {
- 
+    RCLCPP_INFO(this->get_logger(), "Process FLOW data");
     DataFloat pos_x_,pos_y_,speed_x,speed_y;
     memcpy(&pos_x_.data, &frame.data[0], 4);
     memcpy(&pos_y_.data, &frame.data[4], 4);
