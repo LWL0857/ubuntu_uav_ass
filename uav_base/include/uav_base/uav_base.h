@@ -212,7 +212,7 @@ private:
     void processRcData(DataFrame &frame);
     void processFlowData(DataFrame &frame);
 
- void mocap_pos_callback(geometry_msgs::msg::PoseStamped::ConstPtr& msgconst geometry_msgs::msg::PoseStamped msg);
+//  void mocap_pos_callback(geometry_msgs::msg::PoseStamped::ConstPtr& msgconst geometry_msgs::msg::PoseStamped msg);
 
 
 
@@ -271,7 +271,7 @@ private:
     unsigned int auto_stop_count_ = 0;
 
     rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr odom_publisher_;
-    //rclcpp::Publisher<sensor_msgs::msg::Imu>::SharedPtr imu_publisher_;
+    rclcpp::Publisher<sensor_msgs::msg::Imu>::SharedPtr imu_publisher_;
     rclcpp::Publisher<uav_msgs::msg::UavStatus>::SharedPtr status_publisher_;
     rclcpp::Publisher<uav_msgs::msg::UavUwb>::SharedPtr uwb_publisher_;
     rclcpp::Publisher<uav_msgs::msg::Imu>::SharedPtr imu_publisher_;
