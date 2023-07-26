@@ -489,7 +489,7 @@ void UavBase::mocap_pos_callback(const geometry_msgs::msg::PoseStamped::SharedPt
     printf("I heard the pose from the robot"); 
     printf("the position(x,y,z) is %f , %f, %f", msg->pose.position.x, msg->pose.position.y, msg->pose.position.z);
     printf("the orientation(x,y,z,w) is %f , %f, %f, %f", msg->pose.orientation.x, msg->pose.orientation.y, msg->pose.orientation.z, msg->pose.orientation.w);
-    printf("the time we get the pose is %f",  msg->header.stamp.sec + 1e-9*msg->header.stamp.nsec);
+   // printf("the time we get the pose is %f",  msg->header.stamp.sec + 1e-9*msg->header.stamp.nsec);
     std::cout<<"\n \n"<<std::endl; //add two more blank row so that we can see the message more clearly
     DataFloat mocap_pos_x,mocap_pos_y,mocap_pos_z,mocap_ori_x,mocap_ori_y,mocap_ori_z,mocap_ori_w;
     DataFrame mocapFrame;
@@ -510,7 +510,7 @@ void UavBase::mocap_pos_callback(const geometry_msgs::msg::PoseStamped::SharedPt
     memcpy(&mocapFrame.data[24],&mocap_ori_w.data,4);
     // 封装速度命令的
     mocapFrame.header = 0x55;
-    mocapFrame.id     = 0x09;
+    mocapFrame.id     = 0x01;
     mocapFrame.length = 0x1c;
     mocapFrame.tail   = 0xbb;
 
