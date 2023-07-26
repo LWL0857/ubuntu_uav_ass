@@ -212,7 +212,7 @@ private:
     void processRcData(DataFrame &frame);
     void processFlowData(DataFrame &frame);
 
-//  void mocap_pos_callback(geometry_msgs::msg::PoseStamped::ConstPtr& msgconst geometry_msgs::msg::PoseStamped msg);
+    void mocap_pos_callback(geometry_msgs::msg::PoseStamped msg);
 
 
 

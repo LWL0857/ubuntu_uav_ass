@@ -139,21 +139,14 @@ UavBase::UavBase(std::string nodeName) : Node(nodeName)
     this->get_parameter_or<bool>("use_mocap",use_mocap_,false);
     this->get_parameter_or<bool>("use_imu", use_imu_, false);
 
-    // this->declare_parameter("pub_odom");             //声明是否发布odom的tf
-    // this->get_parameter_or<bool>("pub_odom", pub_odom_, false);
-    
-    // 打印加载的参数值
-    // 创建里程计、机器人状态的发布者
-    // odom_publisher_   = this->create_publisher<nav_msgs::msg::Odometry>("odom", 10);
-    status_publisher_ = this->create_publisher<uav_msgs::msg::UavStatus>("uav_status", 1);
-    uwb_publisher_= this->create_publisher<uav_msgs::msg::UavUwb>("uwb", 1);
-    imu_publisher_= this->create_publisher<uav_msgs::msg::Imu>("imu", 1);
-    mag_publisher_ = this->create_publisher<uav_msgs::msg::Mag>("mag", 1);
-    rc_publisher_= this->create_publisher<uav_msgs::msg::Rc>("rc", 1);
-    motorpwm_publisher_ = this->create_publisher<uav_msgs::msg::MotorPwm>("motorpwm", 1);  
-    flow_publisher_ = this->create_publisher<uav_msgs::msg::Flow>("flow", 1);
 
-
+    status_publisher_ = this->create_publisher<uav_msgs::msg::UavStatus>("uav_status", 0.1);
+    uwb_publisher_= this->create_publisher<uav_msgs::msg::UavUwb>("uwb", 0.1);
+    imu_publisher_= this->create_publisher<uav_msgs::msg::Imu>("imu", 0.1);
+    mag_publisher_ = this->create_publisher<uav_msgs::msg::Mag>("mag", 0.1);
+    rc_publisher_= this->create_publisher<uav_msgs::msg::Rc>("rc", 0.1);
+    motorpwm_publisher_ = this->create_publisher<uav_msgs::msg::MotorPwm>("motorpwm", 0.1);  
+    flow_publisher_ = this->create_publisher<uav_msgs::msg::Flow>("flow", 0.1);
     // 创建TF广播器
     tf_broadcaster_ = std::make_unique<tf2_ros::TransformBroadcaster>(*this);
 
@@ -199,17 +192,17 @@ UavBase::UavBase(std::string nodeName) : Node(nodeName)
     if(use_uwb_)
     {
         //创建uwB的话题发布者
-        uwb_publisher_ =this->create_publisher<uav_msgs::msg::UavUwb>("uav_uwb",10);
+        uwb_publisher_ =this->create_publisher<uav_msgs::msg::UavUwb>("uav_uwb",1);
     }
     if(use_flow_)
     {
         //创建uwB的话题发布者
-        flow_publisher_ =this->create_publisher<uav_msgs::msg::Flow >("flow",10);
+        flow_publisher_ =this->create_publisher<uav_msgs::msg::Flow >("flow",1);
     }
 
     if(use_mocap_)
     {
-        //mocap_subscription_ = this->create_subscription<geometry_msgs::msg::PoseStamped>(mocap_sub_name, 10,std::bind(&UavBase::mocap_pos_callback, this, _1));
+        mocap_subscription_ = this->create_subscription<geometry_msgs::msg::PoseStamped>(mocap_sub_name, 10,std::bind(&UavBase::mocap_pos_callback, this, _1));
 
     }
    
@@ -490,57 +483,57 @@ bool UavBase::imu_calibration()
 
     return true;
 }
-//动捕数据尚待解决
-// void UavBase::mocap_pos_callback(geometry_msgs::msg::PoseStamped::ConstPtr& msgconst geometry_msgs::msg::PoseStamped msg)
-// {
-//     // ROS_INFO("I heard the pose from the robot"); 
-//     // ROS_INFO("the position(x,y,z) is %f , %f, %f", msg->pose.position.x, msg->pose.position.y, msg->pose.position.z);
-//     // ROS_INFO("the orientation(x,y,z,w) is %f , %f, %f, %f", msg->pose.orientation.x, msg->pose.orientation.y, msg->pose.orientation.z, msg->pose.orientation.w);
-//     // ROS_INFO("the time we get the pose is %f",  msg->header.stamp.sec + 1e-9*msg->header.stamp.nsec);
-//     std::cout<<"\n \n"<<std::endl; //add two more blank row so that we can see the message more clearly
-//     DataFloat mocap_pox_x,mocap_pos_y,mocap_pos_z,mocap_ori_x,mocap_ori_y,mocap_ori_z,mocap_ori_w;
-//     DataFrame mocapFrame;
+动捕数据尚待解决
+void UavBase::mocap_pos_callback(geometry_msgs::msg::PoseStamped msg)
+{
+    // ROS_INFO("I heard the pose from the robot"); 
+    // ROS_INFO("the position(x,y,z) is %f , %f, %f", msg->pose.position.x, msg->pose.position.y, msg->pose.position.z);
+    // ROS_INFO("the orientation(x,y,z,w) is %f , %f, %f, %f", msg->pose.orientation.x, msg->pose.orientation.y, msg->pose.orientation.z, msg->pose.orientation.w);
+    // ROS_INFO("the time we get the pose is %f",  msg->header.stamp.sec + 1e-9*msg->header.stamp.nsec);
+    std::cout<<"\n \n"<<std::endl; //add two more blank row so that we can see the message more clearly
+    DataFloat mocap_pox_x,mocap_pos_y,mocap_pos_z,mocap_ori_x,mocap_ori_y,mocap_ori_z,mocap_ori_w;
+    DataFrame mocapFrame;
 
-//     mocap_pox_x.f=msg->pose.position.x;
-//     mocap_pos_y.f=msg->pose.position.y
-//     mocap_pos_z.f=msg->pose.position.z
-//     mocap_ori_x.f=msg->pose.orientation.x
-//     mocap_ori_y.f=msg->pose.orientation.y
-//     mocap_ori_z.f=msg->pose.orientation.z
-//     mocap_ori_w.f=msg->pose.orientation.w
-//     memcpy(&mocapFrame.data[0],&mocap_pos_x.data,4);
-//     memcpy(&mocapFrame.data[4],&mocap_pos_y.data,4);
-//     memcpy(&mocapFrame.data[8],&mocap_pos_z.data,4);
-//     memcpy(&mocapFrame.data[12],&mocap_ori_x.data,4);
-//     memcpy(&mocapFrame.data[16],&mocap_ori_y.data,4);
-//     memcpy(&mocapFrame.data[20],&mocap_ori_z.data,4);
-//     memcpy(&mocapFrame.data[24],&mocap_ori_w.data,4);
-//     // 封装速度命令的
-//     mocapFrame.header = 0x55;
-//     mocapFrame.id     = 0x09;
-//     mocapFrame.length = 0x1c;
-//     mocapFrame.tail   = 0xbb;
+    mocap_pox_x.f=msg->pose.position.x;
+    mocap_pos_y.f=msg->pose.position.y
+    mocap_pos_z.f=msg->pose.position.z
+    mocap_ori_x.f=msg->pose.orientation.x
+    mocap_ori_y.f=msg->pose.orientation.y
+    mocap_ori_z.f=msg->pose.orientation.z
+    mocap_ori_w.f=msg->pose.orientation.w
+    memcpy(&mocapFrame.data[0],&mocap_pos_x.data,4);
+    memcpy(&mocapFrame.data[4],&mocap_pos_y.data,4);
+    memcpy(&mocapFrame.data[8],&mocap_pos_z.data,4);
+    memcpy(&mocapFrame.data[12],&mocap_ori_x.data,4);
+    memcpy(&mocapFrame.data[16],&mocap_ori_y.data,4);
+    memcpy(&mocapFrame.data[20],&mocap_ori_z.data,4);
+    memcpy(&mocapFrame.data[24],&mocap_ori_w.data,4);
+    // 封装速度命令的
+    mocapFrame.header = 0x55;
+    mocapFrame.id     = 0x09;
+    mocapFrame.length = 0x1c;
+    mocapFrame.tail   = 0xbb;
 
-//     int len=mocapFrame.length;
-//     uint8_t sum=0;
-//     for(int i=0;i<len;i++)
-//     {   
-//         sum+=mocapFrame.data[i];
+    int len=mocapFrame.length;
+    uint8_t sum=0;
+    for(int i=0;i<len;i++)
+    {   
+        sum+=mocapFrame.data[i];
 
-//     }
-//     mocapFrame.check = sum & 0xff;
+    }
+    mocapFrame.check = sum & 0xff;
 
-//     try
-//     {
-//         serial_.write(&mocapFrame.header, sizeof(mocapFrame)); //向串口发数据
-//     }
+    try
+    {
+        serial_.write(&mocapFrame.header, sizeof(mocapFrame)); //向串口发数据
+    }
 
-//     catch (serial::IOException &e)
-//     {
-//         RCLCPP_ERROR(this->get_logger(), "Unable to send data through serial port"); //如果发送数据失败,打印错误信息
-//     }
+    catch (serial::IOException &e)
+    {
+        RCLCPP_ERROR(this->get_logger(), "Unable to send data through serial port"); //如果发送数据失败,打印错误信息
+    }
 
-// }
+}
 
 
 void sigintHandler(int sig)
