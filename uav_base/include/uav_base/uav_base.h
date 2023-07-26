@@ -27,13 +27,13 @@ limitations under the License.
 #include <serial/serial.h>
 
 #include "rclcpp/rclcpp.hpp"
-#include "geometry_msgs/msg/twist.hpp"
+//#include "geometry_msgs/msg/twist.hpp"
 #include "nav_msgs/msg/odometry.hpp"
 #include "sensor_msgs/msg/imu.hpp"
 
 #include <tf2/LinearMath/Quaternion.h>
 #include <tf2_ros/transform_broadcaster.h>
-#include "geometry_msgs/msg/pose_stamped.hpp"
+#include <geometry_msgs/msg/pose_stamped.hpp>
 
 #include "uav_msgs/msg/uav_status.hpp"
 #include "uav_msgs/srv/uav_led.hpp"
@@ -212,7 +212,7 @@ private:
     void processRcData(DataFrame &frame);
     void processFlowData(DataFrame &frame);
 
-    void mocap_pos_callback(geometry_msgs::msg::PoseStamped msg);
+    void mocap_pos_callback(const geometry_msgs::msg::PoseStamped::SharedPtr msg);
 
 
 
@@ -280,7 +280,7 @@ private:
     rclcpp::Publisher<uav_msgs::msg::MotorPwm>::SharedPtr motorpwm_publisher_;    
     rclcpp::Publisher<uav_msgs::msg::Flow>::SharedPtr flow_publisher_;
     rclcpp::Subscription<geometry_msgs::msg::Twist>::SharedPtr cmd_vel_subscription_;
-    rclcpp::Subscription<geometry_msgs::msg::Twist>::SharedPtr mocap_subscription_;
+    rclcpp::Subscription<geometry_msgs::msg::PoseStamped>::SharedPtr mocap_subscription_;
 
    
   //  rclcpp::Service<originbot_msgs::srv::OriginbotBuzzer>::SharedPtr buzzer_service_;
