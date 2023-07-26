@@ -127,9 +127,9 @@ UavBase::UavBase(std::string nodeName) : Node(nodeName)
     this->declare_parameter("port_name");           //声明及获取串口号参数
     this->get_parameter_or<std::string>("port_name", port_name, "ttyS3");
 
-    std::string mocap_sub_name="vrpn_client_node/RigidBody/pose";
+    std::string mocap_sub_name="/vrpn_mocap/RigidBody/pose";
     this->declare_parameter("mocap_sub_name");
-    this->get_parameter_or<std::string>("mocap_sub_name",mocap_sub_name,"vrpn_client_node/RigidBody/pose");
+    this->get_parameter_or<std::string>("mocap_sub_name",mocap_sub_name,"/vrpn_mocap/RigidBody/pose");
 
     this->declare_parameter("use_imu");            
     this->declare_parameter("use_uwb");
