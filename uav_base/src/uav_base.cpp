@@ -1,19 +1,4 @@
-/***********************************************************************
-Copyright (c) 2022
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-***********************************************************************/
-/////sada
 #include "uav_base/uav_base.h"
 extern  MotorPwm pwm_data_;
 extern   RcData rc_data_;
@@ -64,7 +49,7 @@ void UavBase::uwb_publisher()
     uwb_msg.header.stamp = this->get_clock()->now();
     uwb_msg.pos_x=uwb_data_.pos_x;
     uwb_msg.pos_y=uwb_data_.pos_y;
-    uwb_msg.pos_z=uwb_data_.pos_z
+    uwb_msg.pos_z=uwb_data_.pos_z;
 
     uwb_publisher_->Publisher(uwb_msg);
 }
@@ -137,16 +122,7 @@ UavBase::UavBase(std::string nodeName) : Node(nodeName)
 
     std::string mocap_sub_name="vrpn_client_node/RigidBody/pose";
     this->declare_parameter("mocap_sub_name");
-    this->get_aprameter_or("mocap_sub_name",mocap_sub_name,"vrpn_client_node/RigidBody/pose");
-    
-    this->declare_parameter("correct_factor_vx");   //声明及获取线速度校正参数
-    this->get_parameter_or<float>("correct_factor_vx", correct_factor_vx_, 1.0);
-    this->declare_parameter("correct_factor_vth");  //声明及获取角速度校正参数
-    this->get_parameter_or<float>("correct_factor_vth", correct_factor_vth_, 1.0);
-
-    this->declare_parameter("auto_stop_on");        //声明及获取自动停车功能的开关值
-    this->get_parameter_or<bool>("auto_stop_on", auto_stop_on_, true);
-    
+    this->get_parameter_or("mocap_sub_name",mocap_sub_name,"vrpn_client_node/RigidBody/pose");
     this->declare_parameter("use_imu");             //声明是否使用imu
     this->declare_parameter("use_uwb");
     this->declare_parameter("use_mocap");
@@ -154,33 +130,23 @@ UavBase::UavBase(std::string nodeName) : Node(nodeName)
     this->get_parameter_or<bool>("use_mocap",use_mocap_,false);
     this->get_parameter_or<bool>("use_imu", use_imu_, false);
 
-    this->declare_parameter("pub_odom");             //声明是否发布odom的tf
-    this->get_parameter_or<bool>("pub_odom", pub_odom_, false);
+    // this->declare_parameter("pub_odom");             //声明是否发布odom的tf
+    // this->get_parameter_or<bool>("pub_odom", pub_odom_, false);
     
     // 打印加载的参数值
-    printf("Loading parameters: \n \
-            - port name: %s\n \
-            - correct factor vx: %0.4f\n \
-            - correct factor vth: %0.4f\n \
-            - auto stop on: %d\n \
-            - use uwb: %d\n \
-            - use mocap %d\n \
-            - use imu: %d\n",\
-            port_name.c_str(), correct_factor_vx_, correct_factor_vth_, auto_stop_on_,use_uwb_,use_mocap_, use_imu_); 
+    // printf("Loading parameters: \n \
+    //         - port name: %s\n \
+    //         - correct factor vx: %0.4f\n \
+    //         - correct factor vth: %0.4f\n \
+    //         - auto stop on: %d\n \
+    //         - use uwb: %d\n \
+    //         - use mocap %d\n \
+    //         - use imu: %d\n",\
+    //         port_name.c_str(), correct_factor_vx_, correct_factor_vth_, auto_stop_on_,use_uwb_,use_mocap_, use_imu_); 
 
     // 创建里程计、机器人状态的发布者
-    odom_publisher_   = this->create_publisher<nav_msgs::msg::Odometry>("odom", 10);
+    // odom_publisher_   = this->create_publisher<nav_msgs::msg::Odometry>("odom", 10);
     status_publisher_ = this->create_publisher<uav_msgs::msg::UavStatus>("uav_status", 10);
-
-    // 创建速度指令的订阅者
-    cmd_vel_subscription_ = this->create_subscription<geometry_msgs::msg::Twist>("cmd_vel", 10, std::bind(&UavBase::cmd_vel_callback, this, _1));
-    
-    // 创建控制蜂鸣器和LED的服务
-    //buzzer_service_ = this->create_service<uav_msgs::srv::UavBuzzer>("uav_buzzer", std::bind(&UavBase::buzzer_callback, this, _1, _2));
-    //led_service_ = this->create_service<uav_msgs::srv::UavLed>("uav_led", std::bind(&UavBase::led_callback, this, _1, _2));
-    //left_pid_service_ = this->create_service<uav_msgs::srv::UavPID>("uav_left_pid", std::bind(&UavBase::left_pid_callback, this, _1, _2));
-    //right_pid_service_ = this->create_service<uav_msgs::srv::UavPID>("uav_right_pid", std::bind(&UavBase::right_pid_callback, this, _1, _2));
-
     // 创建TF广播器
     tf_broadcaster_ = std::make_unique<tf2_ros::TransformBroadcaster>(*this);
 
@@ -376,25 +342,6 @@ void UavBase::processDataFrame(DataFrame &frame)
     case FRAME_ID_FLOW:
         processFlowData(frame);
         break;
-
-/*    case FRAME_ID_VELOCITY:
-        processVelocityData(frame);
-        break;
-    case FRAME_ID_ACCELERATION:
-        processAccelerationData(frame);
-        break;
-    case FRAME_ID_ANGULAR:
-        processAngularData(frame);
-        break;
-    case FRAME_ID_EULER:
-        processEulerData(frame);
-        break;
-    case FRAME_ID_SENSOR:
-        processSensorData(frame);
-        break;
-    case FRAME_ID_UWB:
-        processUwbData(frame);
-        */
     default:
         RCLCPP_ERROR(this->get_logger(), "Frame ID Error[%d]", frame.id);
         break;
@@ -421,111 +368,7 @@ void UavBase::processStatusData(DataFrame &frame)
    
     status_publisher();    
 }
-/*
-void UavBase::processVelocityData(DataFrame &frame)
-{
-    //RCLCPP_INFO(this->get_logger(), "Process velocity data");
 
-    float left_speed = 0.0, right_speed = 0.0;
-    float vx = 0.0, vth = 0.0;
-    float delta_th = 0.0, delta_x = 0.0, delta_y = 0.0;
-
-    // 计算两个周期之间的时间差
-    static rclcpp::Time last_time_ = this->now();
-    current_time_ = this->now();
-
-    float dt = (current_time_.seconds() - last_time_.seconds());
-    last_time_ = current_time_;    
-
-    // 获取机器人两侧轮子的速度，完成单位转换mm/s --> m/s
-    uint16_t dataTemp = frame.data[2];
-    float speedTemp = (float)((dataTemp << 8) | frame.data[1]);
-    if (frame.data[0] == 0)
-        left_speed = -1.0 * speedTemp / 1000.0;
-    else
-        left_speed = speedTemp / 1000.0;
-
-    dataTemp = frame.data[5];
-    speedTemp = (float)((dataTemp << 8) | frame.data[4]);
-    if (frame.data[3] == 0)
-        right_speed = -1.0 * speedTemp / 1000.0;
-    else
-        right_speed = speedTemp / 1000.0;
-
-    // 通过两侧轮子的速度，计算机器人整体的线速度和角速度，通过校正参数做校准
-    vx  = correct_factor_vx_  * (left_speed  + right_speed) / 2;                    // m/s
-    vth = correct_factor_vth_ * (right_speed - left_speed) / uav_WHEEL_TRACK; // rad/s
-
-    //RCLCPP_INFO(this->get_logger(), "dt=%f left_speed=%f right_speed=%f vx=%f vth=%f", dt, left_speed, right_speed, vx, vth);
-
-    // 计算里程计单周期内的姿态
-    delta_x = vx * cos(odom_th_) * dt;
-    delta_y = vx * sin(odom_th_) * dt;
-    delta_th = vth * dt;
-    
-    // 计算里程计的累积姿态
-    odom_x_  += delta_x;
-    odom_y_  += delta_y;
-    odom_th_ += delta_th;
-    
-    // 校正姿态角度，让机器人处于-180~180度之间
-    if(odom_th_ > M_PI) 
-        odom_th_ -= M_PI*2;
-    else if(odom_th_ < (-M_PI)) 
-        odom_th_ += M_PI*2;
-
-    // RCLCPP_INFO(this->get_logger(), "x=%f y=%f th=%f delta_x=%f delta_y=%f,delta_th=%f", odom_x_, odom_y_, odom_th_, delta_x, delta_y, delta_th);
-
-    // 发布里程计话题，完成TF广播
-    odom_publisher(vx, vth);    
-}
-
-double UavBase::degToRad(double deg) 
-{
-    return deg / 180.0 * M_PI;
-}
-
-double UavBase::imu_conversion(uint8_t data_high, uint8_t data_low)
-{
-    short transition_16;
-    
-    transition_16 = 0;
-    transition_16 |= data_high << 8;
-    transition_16 |= data_low;
-
-    return transition_16;
-}
-
-void UavBase::processAccelerationData(DataFrame &frame)
-{
-    //RCLCPP_INFO(this->get_logger(), "Process acceleration data");
-
-    imu_data_.acceleration_x = imu_conversion(frame.data[1], frame.data[0]) / 32768 * 16 * 9.8;
-    imu_data_.acceleration_y = imu_conversion(frame.data[3], frame.data[2]) / 32768 * 16 * 9.8;
-    imu_data_.acceleration_z = imu_conversion(frame.data[5], frame.data[4]) / 32768 * 16 * 9.8;
-}
-
-void UavBase::processAngularData(DataFrame &frame)
-{
-    //RCLCPP_INFO(this->get_logger(), "Process angular data");
-
-    imu_data_.angular_x = imu_conversion(frame.data[1], frame.data[0]) / 32768 * degToRad(2000);
-    imu_data_.angular_y = imu_conversion(frame.data[3], frame.data[2]) / 32768 * degToRad(2000);
-    imu_data_.angular_z = imu_conversion(frame.data[5], frame.data[4]) / 32768 * degToRad(2000);
-}
-
-void UavBase::processEulerData(DataFrame &frame)
-{
-    //RCLCPP_INFO(this->get_logger(), "Process euler data");
-
-    imu_data_.roll  = imu_conversion(frame.data[1], frame.data[0]) / 32768 * degToRad(180);
-    imu_data_.pitch = imu_conversion(frame.data[3], frame.data[2]) / 32768 * degToRad(180);
-    imu_data_.yaw   = imu_conversion(frame.data[5], frame.data[4]) / 32768 * degToRad(180);
-
-    if(use_imu_)
-        imu_publisher();
-}
-*/
 void UavBase::processImuData(DataFrame &frame)
 {
     DataFloat acc_x,acc_y,acc_z,gyro_x,gyro_y,gyro_z;
@@ -535,9 +378,9 @@ void UavBase::processImuData(DataFrame &frame)
     memcpy(&gyro_x.data, &frame.data[12], 4);
     memcpy(&gyro_y.data, &frame.data[16], 4);
     memcpy(&gyro_z.data, &frame.data[20], 4);
-    imu_data_.acc_x=acc_x.d;
-    imu_data_.acc_y=acc_y.d;
-    imu_data_.acc_z=acc_z.d;
+    imu_data_.acc_x=acc_x.f;
+    imu_data_.acc_y=acc_y.f;
+    imu_data_.acc_z=acc_z.f;
     imu_publisher();
 }
 void UavBase::processMagData(DataFrame &frame)
@@ -567,31 +410,16 @@ void UavBase::processUwbData(DataFrame &frame)
     if(use_uwb_)
         uwb_publisher();
 }
-void processMotorPWMData(DataFrame &frame)
+void UavBase::processMotorPWMData(DataFrame &frame)
 {
     memcpy(&pwm_data_.pwm_0,&frame.data[0],2);
     memcpy(&pwm_data_.pwm_1,&frame.data[2],2);
     memcpy(&pwm_data_.pwm_2,&frame.data[4],2);
     memcpy(&pwm_data_.pwm_3,&frame.data[6],2);
-    /*
-    memcpy(&pwm_data_.pwm_4,&frame.data[8],2);
-    memcpy(&pwm_data_.pwm_5,&frame.data[10],2);
-    memcpy(&pwm_data_.pwm_6,&frame.data[12],2);
-    memcpy(&pwm_data_.pwm_7,&frame.data[14],2);
-    memcpy(&pwm_data_.pwm_8,&frame.data[16],2);
-    memcpy(&pwm_data_.pwm_9,&frame.data[18],2);
-    memcpy(&pwm_data_.pwm_10,&frame.data[20],2);
-    memcpy(&pwm_data_.pwm_11,&frame.data[22],2);
-    memcpy(&pwm_data_.pwm_12,&frame.data[24],2);
-    memcpy(&pwm_data_.pwm_13,&frame.data[26],2);
-    memcpy(&pwm_data_.pwm_14,&frame.data[28],2);
-    memcpy(&pwm_data_.pwm_15,&frame.data[2],2);
-    */
-
     motorpwm_publisher();
 
 }
-void processRcData(DataFrame &frame)
+void UavBase::processRcData(DataFrame &frame)
 {
     memcpy(&rc_data_.ppm_0,&frame.data[0],2);
     memcpy(&rc_data_.ppm_1,&frame.data[2],2);
@@ -601,30 +429,13 @@ void processRcData(DataFrame &frame)
     memcpy(&rc_data_.ppm_5,&frame.data[10],2);
     memcpy(&rc_data_.ppm_6,&frame.data[12],2);
     memcpy(&rc_data_.ppm_7,&frame.data[14],2);
-
-    /*
-    memcpy(&pwm_data_.pwm_4,&frame.data[8],2);
-    memcpy(&pwm_data_.pwm_5,&frame.data[10],2);
-    memcpy(&pwm_data_.pwm_6,&frame.data[12],2);
-    memcpy(&pwm_data_.pwm_7,&frame.data[14],2);
-    memcpy(&pwm_data_.pwm_8,&frame.data[16],2);
-    memcpy(&pwm_data_.pwm_9,&frame.data[18],2);
-    memcpy(&pwm_data_.pwm_10,&frame.data[20],2);
-    memcpy(&pwm_data_.pwm_11,&frame.data[22],2);
-    memcpy(&pwm_data_.pwm_12,&frame.data[24],2);
-    memcpy(&pwm_data_.pwm_13,&frame.data[26],2);
-    memcpy(&pwm_data_.pwm_14,&frame.data[28],2);
-    memcpy(&pwm_data_.pwm_15,&frame.data[2],2);
-    */
-
-
     rc_publisher();
 
 }
 void UavBase::processFlowData(DataFrame &frame)
 {
  
-    DataFloat pos_x_,pos_x_,speed_x,speed_y;
+    DataFloat pos_x_,pos_y_,speed_x,speed_y;
     memcpy(&pos_x_.data, &frame.data[0], 4);
     memcpy(&pos_y_.data, &frame.data[4], 4);
     memcpy(&speed_x.data, &frame.data[8], 4);
@@ -640,46 +451,6 @@ void UavBase::processFlowData(DataFrame &frame)
 
 }
 
-
-/*
-void UavBase::imu_publisher()
-{
-    //RCLCPP_INFO(this->get_logger(), "Imu Data Publish.");
-
-    // 封装IMU的话题消息
-    auto imu_msg = sensor_msgs::msg::Imu();
-
-    imu_msg.header.frame_id = "imu_link";
-    imu_msg.header.stamp = this->get_clock()->now();
-
-    imu_msg.linear_acceleration.x = imu_data_.acceleration_x;
-    imu_msg.linear_acceleration.y = imu_data_.acceleration_y;
-    imu_msg.linear_acceleration.z = imu_data_.acceleration_z;
-
-    imu_msg.angular_velocity.x = imu_data_.angular_x;
-    imu_msg.angular_velocity.y = imu_data_.angular_y;
-    imu_msg.angular_velocity.z = imu_data_.angular_z;
-
-    tf2::Quaternion q;
-    q.setRPY(imu_data_.roll, imu_data_.pitch, imu_data_.yaw);
-
-    imu_msg.orientation.x = q[0];
-    imu_msg.orientation.y = q[1];
-    imu_msg.orientation.z = q[2];
-    imu_msg.orientation.w = q[3];
-
-    imu_msg.linear_acceleration_covariance = {0.04, 0.00, 0.00, 0.00, 0.04, 0.00, 0.00, 0.00, 0.04};
-
-    imu_msg.angular_velocity_covariance = {0.02, 0.00, 0.00, 0.00, 0.02, 0.00, 0.00, 0.00, 0.02};
-
-    imu_msg.orientation_covariance = {0.0025, 0.0000, 0.0000, 0.0000, 0.0025, 0.0000, 0.0000, 0.0000, 0.0025};
-
-    // 发布IMU话题
-    imu_publisher_->publish(imu_msg);
-}
-
-
-*/
 
 
 
@@ -714,67 +485,8 @@ bool UavBase::imu_calibration()
 
     return true;
 }
-
-void UavBase::cmd_vel_callback(const geometry_msgs::msg::Twist::SharedPtr msg)
-{
-     DataFrame cmdFrame;
-    float leftSpeed = 0.0, rightSpeed = 0.0;
-
-    float x_linear = msg->linear.x; 
-    float z_angular = msg->angular.z;
-
-    //差分轮运动学模型求解
-    leftSpeed  = x_linear - z_angular * ORIGINBOT_WHEEL_TRACK / 2.0;
-    rightSpeed = x_linear + z_angular * ORIGINBOT_WHEEL_TRACK / 2.0;
-
-    // RCLCPP_INFO(this->get_logger(), "leftSpeed = '%f' rightSpeed = '%f'", leftSpeed * 100, rightSpeed * 100);
-
-    if (leftSpeed < 0)
-        cmdFrame.data[0] = 0x00;
-    else
-        cmdFrame.data[0] = 0xff;
-    cmdFrame.data[1] = int(abs(leftSpeed) * 1000) & 0xff;         //速度值从m/s变为mm/s
-    cmdFrame.data[2] = (int(abs(leftSpeed) * 1000) >> 8) & 0xff;
-
-    if (rightSpeed < 0)
-        cmdFrame.data[3] = 0x00;
-    else
-        cmdFrame.data[3] = 0xff;
-    cmdFrame.data[4] = int(abs(rightSpeed) * 1000) & 0xff;        //速度值从m/s变为mm/s
-    cmdFrame.data[5] = (int(abs(rightSpeed) * 1000) >> 8) & 0xff;
-
-    cmdFrame.check = (cmdFrame.data[0] + cmdFrame.data[1] + cmdFrame.data[2] + 
-                      cmdFrame.data[3] + cmdFrame.data[4] + cmdFrame.data[5]) & 0xff;
-
-    // 封装速度命令的数据帧
-    cmdFrame.header = 0x55;
-    cmdFrame.id     = 0x01;
-    cmdFrame.length = 0x06;
-    cmdFrame.tail   = 0xbb;
-    try
-    {
-        serial_.write(&cmdFrame.header, sizeof(cmdFrame)); //向串口发数据
-    }
-
-    catch (serial::IOException &e)
-    {
-        RCLCPP_ERROR(this->get_logger(), "Unable to send data through serial port"); //如果发送数据失败,打印错误信息
-    }
-
-    // 考虑平稳停车的计数值
-    if((fabs(x_linear)>0.0001) || (fabs(z_angular)>0.0001))
-        auto_stop_count_ = 0;
-
-    // printf("Frame raw data: %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x \n", 
-    //         cmdFrame.header, cmdFrame.id, cmdFrame.length, cmdFrame.data[0], cmdFrame.data[1], cmdFrame.data[2], 
-    //         cmdFrame.data[3], cmdFrame.data[4], cmdFrame.data[5], cmdFrame.check, cmdFrame.tail);
-}
-
-
-
-
 //动捕数据尚待解决
-void UavBase::mocap_pos_callback(geometry_msgs::PoseStamped::ConstPtr& msgconst geometry_msgs::PoseStamped msg)
+void UavBase::mocap_pos_callback(geometry_msgs::msg::PoseStamped::ConstPtr& msgconst geometry_msgs::PoseStamped msg)
 {
     ROS_INFO("I heard the pose from the robot"); 
     ROS_INFO("the position(x,y,z) is %f , %f, %f", msg->pose.position.x, msg->pose.position.y, msg->pose.position.z);
@@ -825,248 +537,7 @@ void UavBase::mocap_pos_callback(geometry_msgs::PoseStamped::ConstPtr& msgconst 
 
 }
 
-bool UavBase::buzzer_control(bool on)
-{
-    DataFrame configFrame;
 
-    // 封装蜂鸣器指令的数据帧
-    configFrame.header = 0x55;
-    configFrame.id     = 0x07;
-    configFrame.length = 0x06;
-    configFrame.data[0]= 0x00;
-    configFrame.data[1]= 0x00;
-    configFrame.data[2]= 0xFF;
-
-    if(on)
-        configFrame.data[3]= 0xFF;
-    else
-        configFrame.data[3]= 0x00;
-
-    configFrame.data[4]= 0x00;
-    configFrame.data[5]= 0x00;
-    configFrame.check = (configFrame.data[0] + configFrame.data[1] + configFrame.data[2] + 
-                         configFrame.data[3] + configFrame.data[4] + configFrame.data[5]) & 0xff;
-    configFrame.tail   = 0xbb; 
-
-    try
-    {
-        serial_.write(&configFrame.header, sizeof(configFrame)); //向串口发数据
-    }
-
-    catch (serial::IOException &e)
-    {
-        RCLCPP_ERROR(this->get_logger(), "Unable to send data through serial port"); //如果发送数据失败,打印错误信息
-    }
-
-    return true;
-}
-/*
-
-void UavBase::buzzer_callback(const std::shared_ptr<uav_msgs::srv::UavBuzzer::Request>  request,
-                                          std::shared_ptr<uav_msgs::srv::UavBuzzer::Response> response)
-{
-    robot_status_.buzzer_on = request->on;
-
-    if(buzzer_control(robot_status_.buzzer_on))
-    {
-        RCLCPP_INFO(this->get_logger(), "Set Buzzer state to %d", robot_status_.buzzer_on);
-        response->result = true;
-    }
-    else
-    {
-        RCLCPP_WARN(this->get_logger(), "Set Buzzer state error [%d]", robot_status_.buzzer_on);
-        response->result = false;        
-    }
-}
-*/
-/*
-bool UavBase::led_control(bool on)
-{
-    DataFrame configFrame;
-
-    // 封装控制LED指令的数据帧
-    configFrame.header = 0x55;
-    configFrame.id     = 0x07;
-    configFrame.length = 0x06;
-    configFrame.data[0]= 0xFF;
-
-    if(on)
-        configFrame.data[1]= 0xFF;
-    else
-        configFrame.data[1]= 0x00;
-
-    configFrame.data[2]= 0x00;
-    configFrame.data[3]= 0x00;
-    configFrame.data[4]= 0x00;
-    configFrame.data[5]= 0x00;
-    configFrame.check = (configFrame.data[0] + configFrame.data[1] + configFrame.data[2] + 
-                         configFrame.data[3] + configFrame.data[4] + configFrame.data[5]) & 0xff;
-    configFrame.tail   = 0xbb; 
-
-    try
-    {
-        serial_.write(&configFrame.header, sizeof(configFrame)); //向串口发数据
-    }
-
-    catch (serial::IOException &e)
-    {
-        RCLCPP_ERROR(this->get_logger(), "Unable to send data through serial port"); //如果发送数据失败,打印错误信息
-    }
-
-    return true;
-}
-
-void UavBase::led_callback(const std::shared_ptr<uav_msgs::srv::UavLed::Request>  request,
-                                       std::shared_ptr<uav_msgs::srv::UavLed::Response> response)
-{
-    robot_status_.led_on = request->on;
-
-    if(led_control(robot_status_.led_on))
-    {
-        RCLCPP_INFO(this->get_logger(), "Set Led state to %d", robot_status_.led_on);
-        response->result = true;
-    }
-    else
-    {
-        RCLCPP_INFO(this->get_logger(), "Set Led state error [%d]", robot_status_.led_on);
-        response->result = false;        
-    }
-}                              
-
-void UavBase::left_pid_callback(const std::shared_ptr<uav_msgs::srv::UavPID::Request>  request,
-                                       std::shared_ptr<uav_msgs::srv::UavPID::Response> response)
-{
-    short motor_p = (short)(request->p * 1000);
-    short motor_i = (short)(request->i * 1000);
-    short motor_d = (short)(request->d * 1000);
-
-    DataFrame pidFrame;
-
-    // 封装PID参数的数据帧
-    pidFrame.header = 0x55;
-    pidFrame.id     = 0x08;
-    pidFrame.length = 0x06;
-    pidFrame.data[0]= motor_p & 0xFF;
-    pidFrame.data[1]= (motor_p>>8) & 0xFF;
-    pidFrame.data[2]= motor_i & 0xFF;;
-    pidFrame.data[3]= (motor_i>>8) & 0xFF;
-    pidFrame.data[4]= motor_d & 0xFF;;
-    pidFrame.data[5]= (motor_d>>8) & 0xFF;
-    pidFrame.check = (pidFrame.data[0] + pidFrame.data[1] + pidFrame.data[2] + 
-                      pidFrame.data[3] + pidFrame.data[4] + pidFrame.data[5]) & 0xff;
-    pidFrame.tail   = 0xbb; 
-
-    try
-    {
-        serial_.write(&pidFrame.header, sizeof(pidFrame)); //向串口发数据
-    }
-
-    catch (serial::IOException &e)
-    {
-        RCLCPP_ERROR(this->get_logger(), "Unable to send data through serial port"); //如果发送数据失败,打印错误信息
-    }
-
-    RCLCPP_INFO(this->get_logger(), "Set left motor pid parameters to [%0.4f %0.4f %0.4f]", request->p, request->i, request->d);
-
-    // printf("Frame raw data: %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x \n", 
-    //         pidFrame.header, pidFrame.id, pidFrame.length, pidFrame.data[0], pidFrame.data[1], pidFrame.data[2], 
-    //         pidFrame.data[3], pidFrame.data[4], pidFrame.data[5], pidFrame.check, pidFrame.tail);
-
-    response->result = true;
-}
-
-void UavBase::right_pid_callback(const std::shared_ptr<uav_msgs::srv::UavPID::Request>  request,
-                                       std::shared_ptr<uav_msgs::srv::UavPID::Response> response)
-{
-    short motor_p = (short)(request->p * 1000);
-    short motor_i = (short)(request->i * 1000);
-    short motor_d = (short)(request->d * 1000);
-
-    DataFrame pidFrame;
-
-    // 封装PID参数的数据帧
-    pidFrame.header = 0x55;
-    pidFrame.id     = 0x09;
-    pidFrame.length = 0x06;
-    pidFrame.data[0]= motor_p & 0xFF;
-    pidFrame.data[1]= (motor_p>>8) & 0xFF;
-    pidFrame.data[2]= motor_i & 0xFF;;
-    pidFrame.data[3]= (motor_i>>8) & 0xFF;
-    pidFrame.data[4]= motor_d & 0xFF;;
-    pidFrame.data[5]= (motor_d>>8) & 0xFF;
-    pidFrame.check = (pidFrame.data[0] + pidFrame.data[1] + pidFrame.data[2] + 
-                      pidFrame.data[3] + pidFrame.data[4] + pidFrame.data[5]) & 0xff;
-    pidFrame.tail   = 0xbb; 
-
-    try
-    {
-        serial_.write(&pidFrame.header, sizeof(pidFrame)); //向串口发数据
-    }
-
-    catch (serial::IOException &e)
-    {
-        RCLCPP_ERROR(this->get_logger(), "Unable to send data through serial port"); //如果发送数据失败,打印错误信息
-    }
-
-    RCLCPP_INFO(this->get_logger(), "Set right motor pid parameters to [%0.4f %0.4f %0.4f]", request->p, request->i, request->d);
-
-    // printf("Frame raw data: %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x \n", 
-    //         pidFrame.header, pidFrame.id, pidFrame.length, pidFrame.data[0], pidFrame.data[1], pidFrame.data[2], 
-    //         pidFrame.data[3], pidFrame.data[4], pidFrame.data[5], pidFrame.check, pidFrame.tail);
-
-    response->result = true;
-}
-
-void UavBase::timer_100ms_callback()
-{
-    // 是否开启自动停车，且出发自动停车的条件
-    if(auto_stop_on_ && auto_stop_count_<20)
-    {
-        auto_stop_count_ ++;
-
-         // 0.5之内没有收到指令的话，就自动停车
-        if(auto_stop_count_ > 5)
-        {
-            auto_stop_count_ = 255;
-
-            DataFrame cmdFrame;
-            cmdFrame.data[0] = 0x00;
-            cmdFrame.data[1] = 0x00;         
-            cmdFrame.data[2] = 0x00;
-            cmdFrame.data[3] = 0x00;
-            cmdFrame.data[4] = 0x00; 
-            cmdFrame.data[5] = 0x00;
-            cmdFrame.check = (cmdFrame.data[0] + cmdFrame.data[1] + cmdFrame.data[2] + 
-                            cmdFrame.data[3] + cmdFrame.data[4] + cmdFrame.data[5]) & 0xff;
-
-            // 封装速度命令的数据帧
-            cmdFrame.header = 0x55;
-            cmdFrame.id     = 0x01;
-            cmdFrame.length = 0x06;
-            cmdFrame.tail   = 0xbb;
-            try
-            {
-                serial_.write(&cmdFrame.header, sizeof(cmdFrame)); //向串口发数据
-                RCLCPP_DEBUG(this->get_logger(), "Execute auto stop");
-            }
-
-            catch (serial::IOException &e)
-            {
-                RCLCPP_ERROR(this->get_logger(), "Unable to send data through serial port"); //如果发送数据失败,打印错误信息
-            }           
-        }
-    }
-
-    // 发布机器人的状态信息
-    uav_msgs::msg::UavStatus status_msg;
-
-    status_msg.battery_voltage = robot_status_.battery_voltage;
-    status_msg.buzzer_on = robot_status_.buzzer_on;
-    status_msg.led_on = robot_status_.led_on;
-
-    status_publisher_->publish(status_msg);
-}
-*/
 void sigintHandler(int sig)
 {
     sig = sig;
