@@ -35,7 +35,7 @@ void UavBase::status_publisher()
     status_msg.ahrs_eular_y = uav_status_.ahrsEular_y;
     status_msg.ahrs_eular_z = uav_status_.ahrsEular_z;
     status_msg.height = uav_status_.height;
-    status_msg.battery_voltage = uav_status_.Voltage;
+    status_msg.battery_voltage = uav_status_.voltage;
     status_msg.mode = uav_status_.mode;
     status_msg.lock = uav_status_.lock;
 
@@ -51,7 +51,7 @@ void UavBase::uwb_publisher()
     uwb_msg.pos_y=uwb_data_.pos_y;
     uwb_msg.pos_z=uwb_data_.pos_z;
 
-    uwb_publisher_->publisher(uwb_msg);
+    uwb_publisher_->publish(uwb_msg);
 }
 void UavBase::mag_publisher()
 {
@@ -63,7 +63,7 @@ void UavBase::mag_publisher()
     mag_msg.magraw_x=mag_data_.magraw_x;
     mag_msg.magraw_x=mag_data_.magraw_x;
 
-    mag_publisher_->publisher(mag_msg);
+    mag_publisher_->publish(mag_msg);
 
 }
 
@@ -77,7 +77,7 @@ void UavBase::motorpwm_publisher()
     pwm_msg.pwm_2=pwm_data_.pwm_2;
     pwm_msg.pwm_3=pwm_data_.pwm_3;
 
-    motorpwm_publisher_->publisher(pwm_msg);
+    motorpwm_publisher_->publish(pwm_msg);
 
 
 }
@@ -96,7 +96,7 @@ void UavBase::rc_publisher()
     rc_msg.ppm_6 = rc_data_.ppm_6;
     rc_msg.ppm_7 = rc_data_.ppm_7;
 
-    rc_publisher_->Publisher(rc_msg);
+    rc_publisher_->publish(rc_msg);
 }
 void UavBase::flow_publisher()
 {
@@ -108,7 +108,7 @@ auto flow_msg = uav_msgs::msg::Flow();
     flow_msg.speed_x=flow_data_.speed_x;
     flow_msg.speed_y=flow_data_.speed_y;
 
-    flow_publisher_->publisher(flow_msg);
+    flow_publisher_->publish(flow_msg);
 }
 
 
@@ -185,7 +185,7 @@ UavBase::UavBase(std::string nodeName) : Node(nodeName)
     if(use_imu_)
     {
         // 创建IMU的话题发布者
-        imu_publisher_    = this->create_publisher<sensor_msgs::msg::Imu>("imu", 10);
+       // imu_publisher_    = this->create_publisher<sensor_msgs::msg::Imu>("imu", 10);
 
         // IMU初始化标定
        /*
@@ -210,7 +210,7 @@ UavBase::UavBase(std::string nodeName) : Node(nodeName)
 
     if(use_mocap_)
     {
-        mocap_subscription_ = this->create_subscription<geometry_msgs::msg::PoseStamped>(mocap_sub_name, 10,std::bind(&UavBase::mocap_pos_callback, this, _1));
+        //mocap_subscription_ = this->create_subscription<geometry_msgs::msg::PoseStamped>(mocap_sub_name, 10,std::bind(&UavBase::mocap_pos_callback, this, _1));
 
     }
     // 设置LED灯的初始状态
@@ -365,7 +365,7 @@ void UavBase::processStatusData(DataFrame &frame)
     memcpy(&ahrsEular_y.data,&frame.data[4],4);
     memcpy(&ahrsEular_z.data,&frame.data[8],4);
     memcpy(&height.data,&frame.data[12],4);
-    memcpy(&battery_Voltage.data,&frame.data[16],4);
+    memcpy(&battery_voltage.data,&frame.data[16],4);
     uav_status_.ahrsEular_x=ahrsEular_x.f;
     uav_status_.ahrsEular_y=ahrsEular_y.f;
     uav_status_.ahrsEular_z=ahrsEular_z.f;

@@ -257,8 +257,8 @@ private:
     UavStatus uav_status_;//ok
     Imu imu_data_;//ok
     MagRaw mag_data_;
- extern   RcData rc_data_;
- extern  MotorPwm pwm_data_;
+  RcData rc_data_;
+  MotorPwm pwm_data_;
     FlowData flow_data_;
 
     rclcpp::TimerBase::SharedPtr timer_100ms_;
@@ -271,7 +271,6 @@ private:
     unsigned int auto_stop_count_ = 0;
 
     rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr odom_publisher_;
-    rclcpp::Publisher<sensor_msgs::msg::Imu>::SharedPtr imu_publisher_;
     rclcpp::Publisher<uav_msgs::msg::UavStatus>::SharedPtr status_publisher_;
     rclcpp::Publisher<uav_msgs::msg::UavUwb>::SharedPtr uwb_publisher_;
     rclcpp::Publisher<uav_msgs::msg::Imu>::SharedPtr imu_publisher_;
