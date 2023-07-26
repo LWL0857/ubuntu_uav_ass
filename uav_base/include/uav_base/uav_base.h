@@ -102,7 +102,7 @@ typedef struct {
     float ahrsEular_y;
     float ahrsEular_z;
     float height;
-    float battery_Voltage;
+    float battery_voltage;
     uint8_t mode;
     uint8_t lock;
     bool buzzer_on;
@@ -185,7 +185,7 @@ enum
 
 };
 
-class UavBase : public rclcpp::Node
+class UavBase :public rclcpp::Node
 {
 public:
     UavBase(std::string nodeName);
@@ -212,6 +212,7 @@ private:
     void processRcData(DataFrame &frame);
     void processFlowData(DataFrame &frame);
 
+ void mocap_pos_callback(geometry_msgs::msg::PoseStamped::ConstPtr& msgconst geometry_msgs::msg::PoseStamped msg);
 
 
 
@@ -280,6 +281,8 @@ private:
     rclcpp::Publisher<uav_msgs::msg::MotorPwm>::SharedPtr motorpwm_publisher_;    
     rclcpp::Publisher<uav_msgs::msg::Flow>::SharedPtr flow_publisher_;
     rclcpp::Subscription<geometry_msgs::msg::Twist>::SharedPtr cmd_vel_subscription_;
+    rclcpp::Subscription<geometry_msgs::msg::Twist>::SharedPtr mocap_subscription_;
+
    
   //  rclcpp::Service<originbot_msgs::srv::OriginbotBuzzer>::SharedPtr buzzer_service_;
     //rclcpp::Service<originbot_msgs::srv::OriginbotLed>::SharedPtr led_service_;

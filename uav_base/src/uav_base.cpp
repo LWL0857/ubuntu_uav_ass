@@ -35,7 +35,7 @@ void UavBase::status_publisher()
     status_msg.ahrs_eular_y = uav_status_.ahrsEular_y;
     status_msg.ahrs_eular_z = uav_status_.ahrsEular_z;
     status_msg.height = uav_status_.height;
-    status_msg.battery_Voltage = uav_status_.Voltage;
+    status_msg.battery_voltage = uav_status_.Voltage;
     status_msg.mode = uav_status_.mode;
     status_msg.lock = uav_status_.lock;
 
@@ -122,7 +122,7 @@ UavBase::UavBase(std::string nodeName) : Node(nodeName)
 
     std::string mocap_sub_name="vrpn_client_node/RigidBody/pose";
     this->declare_parameter("mocap_sub_name");
-    this->get_parameter_or("mocap_sub_name",mocap_sub_name,"vrpn_client_node/RigidBody/pose");
+    this->get_parameter_or<std::string>("mocap_sub_name",mocap_sub_name,"vrpn_client_node/RigidBody/pose");
     this->declare_parameter("use_imu");             //声明是否使用imu
     this->declare_parameter("use_uwb");
     this->declare_parameter("use_mocap");
@@ -362,7 +362,7 @@ void UavBase::processStatusData(DataFrame &frame)
     uav_status_.ahrsEular_y=ahrsEular_y.f;
     uav_status_.ahrsEular_z=ahrsEular_z.f;
     uav_status_.height=height.f;
-    uav_status_.battery_Voltage=battery_Voltage.f;
+    uav_status_.battery_voltage=battery_voltage.f;
     memcpy(&uav_status_.mode,&frame.data[20],4);
     memcpy(&uav_status_.lock,&frame.data[21],4);
    
@@ -486,26 +486,26 @@ bool UavBase::imu_calibration()
     return true;
 }
 //动捕数据尚待解决
-void UavBase::mocap_pos_callback(geometry_msgs::msg::PoseStamped::ConstPtr& msgconst geometry_msgs::PoseStamped msg)
+void UavBase::mocap_pos_callback(geometry_msgs::msg::PoseStamped::ConstPtr& msgconst geometry_msgs::msg::PoseStamped msg)
 {
-    ROS_INFO("I heard the pose from the robot"); 
-    ROS_INFO("the position(x,y,z) is %f , %f, %f", msg->pose.position.x, msg->pose.position.y, msg->pose.position.z);
-    ROS_INFO("the orientation(x,y,z,w) is %f , %f, %f, %f", msg->pose.orientation.x, msg->pose.orientation.y, msg->pose.orientation.z, msg->pose.orientation.w);
-    ROS_INFO("the time we get the pose is %f",  msg->header.stamp.sec + 1e-9*msg->header.stamp.nsec);
+    // ROS_INFO("I heard the pose from the robot"); 
+    // ROS_INFO("the position(x,y,z) is %f , %f, %f", msg->pose.position.x, msg->pose.position.y, msg->pose.position.z);
+    // ROS_INFO("the orientation(x,y,z,w) is %f , %f, %f, %f", msg->pose.orientation.x, msg->pose.orientation.y, msg->pose.orientation.z, msg->pose.orientation.w);
+    // ROS_INFO("the time we get the pose is %f",  msg->header.stamp.sec + 1e-9*msg->header.stamp.nsec);
     std::cout<<"\n \n"<<std::endl; //add two more blank row so that we can see the message more clearly
     DataFloat mocap_pox_x,mocap_pos_y,mocap_pos_z,mocap_ori_x,mocap_ori_y,mocap_ori_z,mocap_ori_w;
     DataFrame mocapFrame;
 
-    mocap_pox_x.d=msg->pose.position.x;
-    mocap_pos_y.d=msg->pose.position.y
-    mocap_pos_z.d=msg->pose.position.z
-    mocap_ori_x.d=msg->pose.orientation.x
-    mocap_ori_y.d=msg->pose.orientation.y
-    mocap_ori_z.d=msg->pose.orientation.z
-    mocap_ori_w.d=msg->pose.orientation.w
-    memcpy(&mocapFrame.data[0],&mocap_pox_x.data,4);
-    memcpy(&mocapFrame.data[4],&mocap_pox_y.data,4);
-    memcpy(&mocapFrame.data[8],&mocap_pox_z.data,4);
+    mocap_pox_x.f=msg->pose.position.x;
+    mocap_pos_y.f=msg->pose.position.y
+    mocap_pos_z.f=msg->pose.position.z
+    mocap_ori_x.f=msg->pose.orientation.x
+    mocap_ori_y.f=msg->pose.orientation.y
+    mocap_ori_z.f=msg->pose.orientation.z
+    mocap_ori_w.f=msg->pose.orientation.w
+    memcpy(&mocapFrame.data[0],&mocap_pos_x.data,4);
+    memcpy(&mocapFrame.data[4],&mocap_pos_y.data,4);
+    memcpy(&mocapFrame.data[8],&mocap_pos_z.data,4);
     memcpy(&mocapFrame.data[12],&mocap_ori_x.data,4);
     memcpy(&mocapFrame.data[16],&mocap_ori_y.data,4);
     memcpy(&mocapFrame.data[20],&mocap_ori_z.data,4);
@@ -518,7 +518,7 @@ void UavBase::mocap_pos_callback(geometry_msgs::msg::PoseStamped::ConstPtr& msgc
 
     int len=mocapFrame.length;
     uint8_t sum=0;
-    for(int i<0;i<len;i++)
+    for(int i=0;i<len;i++)
     {   
         sum+=mocapFrame.data[i];
 
