@@ -60,9 +60,11 @@ void UavBase::mag_publisher()
     auto mag_msg=uav_msgs::msg::Mag();
     mag_msg.header.frame_id = "mag_link";
     mag_msg.header.stamp = this->get_clock()->now();
+
+    //auto now_sec = msg->header.stamp.sec + msg->header.stamp.nanosec * 1e-9;
     mag_msg.magraw_x=mag_data_.magraw_x;
-    mag_msg.magraw_x=mag_data_.magraw_x;
-    mag_msg.magraw_x=mag_data_.magraw_x;
+    mag_msg.magraw_y=mag_data_.magraw_z;
+    mag_msg.magraw_w=mag_data_.magraw_w;
 
     mag_publisher_->publish(mag_msg);
 
@@ -143,13 +145,13 @@ UavBase::UavBase(std::string nodeName) : Node(nodeName)
     // 打印加载的参数值
     // 创建里程计、机器人状态的发布者
     // odom_publisher_   = this->create_publisher<nav_msgs::msg::Odometry>("odom", 10);
-    status_publisher_ = this->create_publisher<uav_msgs::msg::UavStatus>("uav_status", 10);
-    uwb_publisher_= this->create_publisher<uav_msgs::msg::UavUwb>("uwb", 10);
-    imu_publisher_= this->create_publisher<uav_msgs::msg::Imu>("imu", 10);
-    mag_publisher_ = this->create_publisher<uav_msgs::msg::Mag>("mag", 10);
-    rc_publisher_= this->create_publisher<uav_msgs::msg::Rc>("rc", 10);
-    motorpwm_publisher_ = this->create_publisher<uav_msgs::msg::MotorPwm>("motorpwm", 10);  
-    flow_publisher_ = this->create_publisher<uav_msgs::msg::Flow>("flow", 10);
+    status_publisher_ = this->create_publisher<uav_msgs::msg::UavStatus>("uav_status", 1);
+    uwb_publisher_= this->create_publisher<uav_msgs::msg::UavUwb>("uwb", 1);
+    imu_publisher_= this->create_publisher<uav_msgs::msg::Imu>("imu", 1);
+    mag_publisher_ = this->create_publisher<uav_msgs::msg::Mag>("mag", 1);
+    rc_publisher_= this->create_publisher<uav_msgs::msg::Rc>("rc", 1);
+    motorpwm_publisher_ = this->create_publisher<uav_msgs::msg::MotorPwm>("motorpwm", 1);  
+    flow_publisher_ = this->create_publisher<uav_msgs::msg::Flow>("flow", 1);
 
 
     // 创建TF广播器
