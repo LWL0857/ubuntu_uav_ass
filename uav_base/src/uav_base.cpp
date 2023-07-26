@@ -35,7 +35,7 @@ void UavBase::status_publisher()
     status_msg.ahrs_eular_y = uav_status_.ahrsEular_y;
     status_msg.ahrs_eular_z = uav_status_.ahrsEular_z;
     status_msg.height = uav_status_.height;
-    status_msg.battery_voltage = uav_status_.voltage;
+    status_msg.battery_voltage = uav_status_.battery_voltage;
     status_msg.mode = uav_status_.mode;
     status_msg.lock = uav_status_.lock;
 
@@ -134,16 +134,6 @@ UavBase::UavBase(std::string nodeName) : Node(nodeName)
     // this->get_parameter_or<bool>("pub_odom", pub_odom_, false);
     
     // 打印加载的参数值
-    // printf("Loading parameters: \n \
-    //         - port name: %s\n \
-    //         - correct factor vx: %0.4f\n \
-    //         - correct factor vth: %0.4f\n \
-    //         - auto stop on: %d\n \
-    //         - use uwb: %d\n \
-    //         - use mocap %d\n \
-    //         - use imu: %d\n",\
-    //         port_name.c_str(), correct_factor_vx_, correct_factor_vth_, auto_stop_on_,use_uwb_,use_mocap_, use_imu_); 
-
     // 创建里程计、机器人状态的发布者
     // odom_publisher_   = this->create_publisher<nav_msgs::msg::Odometry>("odom", 10);
     status_publisher_ = this->create_publisher<uav_msgs::msg::UavStatus>("uav_status", 10);
