@@ -140,13 +140,13 @@ UavBase::UavBase(std::string nodeName) : Node(nodeName)
     this->get_parameter_or<bool>("use_imu", use_imu_, false);
 
 
-    status_publisher_ = this->create_publisher<uav_msgs::msg::UavStatus>("uav_status", 0.1);
-    uwb_publisher_= this->create_publisher<uav_msgs::msg::UavUwb>("uwb", 0.1);
-    imu_publisher_= this->create_publisher<uav_msgs::msg::Imu>("imu", 0.1);
-    mag_publisher_ = this->create_publisher<uav_msgs::msg::Mag>("mag", 0.1);
-    rc_publisher_= this->create_publisher<uav_msgs::msg::Rc>("rc", 0.1);
-    motorpwm_publisher_ = this->create_publisher<uav_msgs::msg::MotorPwm>("motorpwm", 0.1);  
-    flow_publisher_ = this->create_publisher<uav_msgs::msg::Flow>("flow", 0.1);
+    status_publisher_ = this->create_publisher<uav_msgs::msg::UavStatus>("uav_status", 10);
+    uwb_publisher_= this->create_publisher<uav_msgs::msg::UavUwb>("uwb", 10);
+    imu_publisher_= this->create_publisher<uav_msgs::msg::Imu>("imu", 10);
+    mag_publisher_ = this->create_publisher<uav_msgs::msg::Mag>("mag", 10);
+    rc_publisher_= this->create_publisher<uav_msgs::msg::Rc>("rc", 10);
+    motorpwm_publisher_ = this->create_publisher<uav_msgs::msg::MotorPwm>("motorpwm", 10);  
+    flow_publisher_ = this->create_publisher<uav_msgs::msg::Flow>("flow", 10);
     // 创建TF广播器
     tf_broadcaster_ = std::make_unique<tf2_ros::TransformBroadcaster>(*this);
 
@@ -192,12 +192,12 @@ UavBase::UavBase(std::string nodeName) : Node(nodeName)
     if(use_uwb_)
     {
         //创建uwB的话题发布者
-        uwb_publisher_ =this->create_publisher<uav_msgs::msg::UavUwb>("uav_uwb",1);
+        uwb_publisher_ =this->create_publisher<uav_msgs::msg::UavUwb>("uav_uwb",10);
     }
     if(use_flow_)
     {
         //创建uwB的话题发布者
-        flow_publisher_ =this->create_publisher<uav_msgs::msg::Flow >("flow",1);
+        flow_publisher_ =this->create_publisher<uav_msgs::msg::Flow >("flow",10);
     }
 
     if(use_mocap_)
